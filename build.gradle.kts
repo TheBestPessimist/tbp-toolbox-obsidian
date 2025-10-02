@@ -8,11 +8,12 @@ plugins {
 tasks.register<Exec>("dev") {
     group = "application"
     description = "Compile Kotlin to JS and start the development server"
+    workingDir = projectDir
 
-    // Step 1: Compile Kotlin to JS
+    // 1. Compile Kotlin to JS
     dependsOn(":shared:jsBrowserDevelopmentLibraryDistribution")
 
-    // Step 2 & 3: Run npm install and start dev server
+    // 2. Run npm
     // Detect OS and use appropriate command
     val isWindows = System.getProperty("os.name").lowercase().contains("windows")
 
@@ -21,6 +22,4 @@ tasks.register<Exec>("dev") {
     } else {
         commandLine("sh", "-c", "npm install && npm run start")
     }
-
-    workingDir = projectDir
 }
