@@ -1,7 +1,6 @@
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    
+
 }
 
 kotlin {
@@ -14,8 +13,14 @@ kotlin {
             target = "es2015"
         }
     }
-    
+
     sourceSets {
+        all {
+            languageSettings.apply {
+                languageVersion = "2.2"
+                apiVersion = "2.2"
+            }
+        }
         commonMain.dependencies {
             // put your Multiplatform dependencies here
         }
@@ -24,4 +29,3 @@ kotlin {
         }
     }
 }
-
