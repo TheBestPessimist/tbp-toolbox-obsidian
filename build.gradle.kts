@@ -4,6 +4,11 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
 }
 
+tasks.wrapper {
+    gradleVersion = "9.1.0"
+    distributionType = Wrapper.DistributionType.ALL
+}
+
 // Task to compile Kotlin and run the dev server
 tasks.register<Exec>("dev") {
     group = "application"
