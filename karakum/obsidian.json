@@ -1,0 +1,6 @@
+{
+	"input": "D:/all/work/Obsidian Dev Vault/.obsidian/plugins/tbp-toolbox/build/js/node_modules/obsidian/obsidian.d.ts",
+	"output": "generated",
+	"libraryName": "obsidian",
+	"how to run": "npx karakum --config obsidian.json"
+}

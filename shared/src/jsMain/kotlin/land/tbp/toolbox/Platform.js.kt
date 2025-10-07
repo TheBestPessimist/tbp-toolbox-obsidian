@@ -1,7 +1,24 @@
 package land.tbp.toolbox
 
-class JsPlatform: Platform {
-    override val name: String = "Web with Kotlin/JS"
-}
+import org.w3c.dom.HTMLElement
+//
+// interface MyPluginSettings {
+// 	val mySetting: String
+// }
+//
+// object DEFAULT_SETTINGS : MyPluginSettings {
+// 	override val mySetting: String
+// 		get() = "default"
+// }
 
-actual fun getPlatform(): Platform = JsPlatform()
+class MyPlugin : obsidian.Plugin {
+	override fun onload() {
+
+	}
+
+	override fun addStatusBarItem(): HTMLElement {
+
+	}
+}
+the current status is this:
+[Error after converting obsidian library · Issue #40 · karakum-team/karakum](https://github.com/karakum-team/karakum/issues/40) - help
