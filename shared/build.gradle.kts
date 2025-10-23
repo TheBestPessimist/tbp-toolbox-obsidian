@@ -4,16 +4,29 @@ plugins {
 }
 
 kotlin {
-	js {
+	js(IR) {
 		outputModuleName = "shared"
-		nodejs {
+
+		// Obsidian runs in Electron (browser-like environment)
+		// Using browser target for proper environment
+		browser {
+			// No webpack needed - we're using whole-program compilation
 		}
+
+		// Generate executable binary (single .js file with whole-program granularity)
 		binaries.executable()
+
+		// Generate TypeScript definitions for better IDE support
 		generateTypeScriptDefinitions()
-		// Use CommonJS module format for Obsidian plugin compatibility
-		useCommonJs()
+
+		// Compiler options following official Kotlin/JS documentation
 		compilerOptions {
+			// Target ES2015 for modern JavaScript features
 			target = "es2015"
+
+			// Use CommonJS module format for Obsidian plugin compatibility
+			// This is the official way per https://kotlinlang.org/docs/js-modules.html
+			moduleKind = org.jetbrains.kotlin.gradle.dsl.JsModuleKind.MODULE_COMMONJS
 		}
 	}
 
