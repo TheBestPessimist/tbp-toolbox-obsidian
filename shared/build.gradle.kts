@@ -10,6 +10,8 @@ kotlin {
 		}
 		binaries.executable()
 		generateTypeScriptDefinitions()
+		// Use CommonJS module format for Obsidian plugin compatibility
+		useCommonJs()
 		compilerOptions {
 			target = "es2015"
 		}

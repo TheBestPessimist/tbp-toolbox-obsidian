@@ -1,0 +1,10 @@
+{
+	"id": "tbp-toolbox",
+	"name": "TBP Toolbox",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "A toolbox plugin built with Kotlin/JS",
+	"author": "TheBestPessimist",
+	"isDesktopOnly": false
+}
+

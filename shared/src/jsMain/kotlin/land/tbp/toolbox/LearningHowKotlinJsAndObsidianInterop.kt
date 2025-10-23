@@ -3,6 +3,7 @@ package land.tbp.toolbox
 import obsidian.*
 import org.w3c.dom.events.MouseEvent
 import kotlin.js.Promise
+import kotlin.js.unsafeCast
 
 /**
  * Settings interface for the plugin1
@@ -151,7 +152,7 @@ class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) {
 		registerInterval(intervalId)
 	}
 
-	fun onunload() {
+	override fun onunload() {
 		console.log("Unloading MyPlugin")
 	}
 
@@ -195,7 +196,8 @@ class SampleModal(app: App) : Modal(app) {
 /**
  * Sample Settings Tab - pure Kotlin implementation
  */
-class SampleSettingTab(app: App, private val plugin: MyPlugin) : PluginSettingTab(app, plugin) {
+class SampleSettingTab(app: App, val myPlugin: MyPlugin) : PluginSettingTab(app, myPlugin) {
+
 	override fun display() {
 		containerEl.empty()
 
@@ -205,10 +207,10 @@ class SampleSettingTab(app: App, private val plugin: MyPlugin) : PluginSettingTa
 			.addText { text ->
 				text
 					.setPlaceholder("Enter your secret")
-					.setValue(plugin.settings.mySetting)
+					.setValue(myPlugin.settings.mySetting)
 					.onChange { value ->
-						plugin.settings.mySetting = value
-						plugin.saveSettings()
+						myPlugin.settings.mySetting = value
+						myPlugin.saveSettings()
 					}
 			}
 	}
