@@ -57,11 +57,9 @@ class CommandBuilder {
 
 /**
  * Main plugin class
- * This will be exported as the default export for Obsidian to load
+ * This is exported via the root-level ObsidianPlugin wrapper class
  */
-@JsExport
-@JsName("default")
-class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) {
+open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) {
 	var settings: MyPluginSettings = DefaultSettings()
 
 	override fun onload(): Any {

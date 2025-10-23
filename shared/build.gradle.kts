@@ -40,8 +40,6 @@ kotlin {
 			implementation(devNpm("@types/node", "^16.11.6"))
 			implementation(devNpm("@typescript-eslint/eslint-plugin", "5.29.0"))
 			implementation(devNpm("@typescript-eslint/parser", "5.29.0"))
-			implementation(devNpm("builtin-modules", "3.3.0"))
-			implementation(devNpm("esbuild", "0.17.3"))
 			implementation(devNpm("obsidian", "latest"))
 			implementation(devNpm("tslib", "2.4.0"))
 			implementation(devNpm("typescript", "4.7.4"))

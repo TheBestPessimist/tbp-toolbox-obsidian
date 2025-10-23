@@ -8,14 +8,9 @@
   ],
   "scripts": {
     "build": "cd webApp && npm run build",
-    "start": "cd webApp && npm run start",
-    "bundle:dev": "node esbuild.config.mjs",
-    "bundle:watch": "node esbuild.config.mjs --watch",
-    "bundle:prod": "node esbuild.config.mjs production"
+    "start": "cd webApp && npm run start"
   },
   "devDependencies": {
-    "esbuild": "0.17.3",
-    "builtin-modules": "3.3.0",
     "karakum": "^1.0.0-alpha.77",
     "typescript": "^5.9.3"
   }
