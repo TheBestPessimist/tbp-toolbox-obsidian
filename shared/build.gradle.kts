@@ -24,7 +24,8 @@ kotlin {
 			}
 		}
 		commonMain.dependencies {
-			// put your Multiplatform dependencies here
+			// Coroutines support for async/await
+			implementation(libs.kotlinx.coroutines.core)
 		}
 		commonTest.dependencies {
 			implementation(libs.kotlin.test)
