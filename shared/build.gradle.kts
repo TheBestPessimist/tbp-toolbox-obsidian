@@ -1,7 +1,9 @@
 plugins {
 	alias(libs.plugins.kotlinMultiplatform)
-
+	alias(libs.plugins.kotest)
+	alias(libs.plugins.ksp)
 }
+
 
 kotlin {
 	js(IR) {
@@ -10,7 +12,15 @@ kotlin {
 		// Obsidian runs in Electron (browser-like environment)
 		// Using browser target for proper environment
 		browser {
-			// No webpack needed - we're using whole-program compilation
+		}
+
+		// Use Node.js for running tests
+		nodejs {
+			testTask {
+				useMocha {
+					timeout = "10s"
+				}
+			}
 		}
 
 		// Generate executable binary (single .js file with whole-program granularity)
@@ -44,9 +54,8 @@ kotlin {
 		}
 		commonTest.dependencies {
 			implementation(libs.kotlin.test)
-		}
-		commonTest.dependencies {
-			implementation(kotlin("test")) // Brings all the platform dependencies automatically
+			implementation(libs.kotest.framework.engine)
+			implementation(libs.kotest.assertions.core)
 		}
 		jsMain.dependencies {
 			implementation(npm("react", "> 14.0.0 <=16.9.0"))
