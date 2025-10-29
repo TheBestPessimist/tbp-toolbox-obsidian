@@ -6,18 +6,15 @@ plugins {
 
 kotlin {
 	js {
-		// Set the module name to "obsidian" so it can be required as require("obsidian")
-		outputModuleName = "obsidian"
-
-		// Use nodejs target since tests run in Node.js
+		// This is just an API definition library, not a runnable module
+		// We don't set outputModuleName because this won't be compiled to a standalone module
+		
+		// Use nodejs target for compatibility
 		nodejs {
 		}
 
-		// Generate a library (not executable)
+		// This is a library of external declarations only
 		binaries.library()
-
-		// Generate TypeScript definitions for better IDE support
-		generateTypeScriptDefinitions()
 
 		compilerOptions {
 			// Target ES2015 for modern JavaScript features
@@ -38,9 +35,8 @@ kotlin {
 		jsMain {
 			dependencies {
 				api(kotlin("stdlib-js"))
-				// Depend on obsidian-api for external declarations
-				api(project(":obsidian-api"))
 			}
 		}
 	}
 }
+

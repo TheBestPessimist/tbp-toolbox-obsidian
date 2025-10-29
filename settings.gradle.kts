@@ -16,5 +16,8 @@ dependencyResolutionManagement {
     }
 }
 
-// Include the fake-obsidian subproject for testing
+// Include the obsidian-api subproject (external API declarations)
+include("obsidian-api")
+
+// Include the fake-obsidian subproject (test implementations)
 include("fake-obsidian")

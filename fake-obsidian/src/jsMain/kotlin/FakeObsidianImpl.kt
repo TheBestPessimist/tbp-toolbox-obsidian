@@ -9,6 +9,9 @@ import kotlin.js.Promise
 /**
  * Fake implementations of Obsidian API classes for testing.
  * These are minimal stub implementations that allow tests to run.
+ *
+ * Note: These implementations are exported as the "obsidian" module for testing.
+ * The external declarations come from the obsidian-api project.
  */
 
 @OptIn(ExperimentalJsExport::class)
@@ -247,4 +250,3 @@ open class MarkdownView {
     var file: TFile? = null
     var editor: Editor = Editor()
 }
-

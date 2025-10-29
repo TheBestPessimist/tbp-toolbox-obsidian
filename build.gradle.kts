@@ -52,13 +52,12 @@ kotlin {
 			implementation(libs.kotest.assertions.core)
 		}
 
-		jsTest.dependencies {
-			// Use fake-obsidian library for testing
-			implementation(project(":fake-obsidian"))
-		}
-
 		jsMain.dependencies {
 			api(kotlin("stdlib-js"))
+
+			// Use obsidian-api for Obsidian API type declarations
+			api(project(":obsidian-api"))
+
 			implementation(npm("react", "> 14.0.0 <=16.9.0"))
 			implementation(devNpm("@types/node", "^16.11.6"))
 			implementation(devNpm("@typescript-eslint/eslint-plugin", "5.29.0"))
@@ -69,6 +68,11 @@ kotlin {
 			implementation(devNpm("@codemirror/view", "6.38.1"))
 			implementation(devNpm("tslib", "2.4.0"))
 			implementation(devNpm("typescript", "4.7.4"))
+		}
+
+		jsTest.dependencies {
+			// Use fake-obsidian for testing (includes obsidian-api + stub implementations)
+			implementation(project(":fake-obsidian"))
 		}
 	}
 }
