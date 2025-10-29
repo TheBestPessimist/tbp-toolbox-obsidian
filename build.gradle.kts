@@ -71,8 +71,8 @@ kotlin {
 		}
 
 		jsTest.dependencies {
-			// Use fake-obsidian for testing (includes obsidian-api + stub implementations)
-			implementation(project(":fake-obsidian"))
+			// Use obsidian-fake for testing (includes obsidian-api + stub implementations)
+			implementation(project(":obsidian-fake"))
 		}
 	}
 }
