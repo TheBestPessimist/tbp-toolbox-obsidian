@@ -15,3 +15,6 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+
+// Include the fake-obsidian subproject for testing
+include("fake-obsidian")

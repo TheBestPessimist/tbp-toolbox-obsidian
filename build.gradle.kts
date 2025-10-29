@@ -127,3 +127,59 @@ tasks.register<Exec>("buildPluginProduction") {
 		commandLine("cp", "shared/build/compileSync/js/main/productionExecutable/kotlin/shared.js", "main.js")
 	}
 }
+
+// Task to create package.json for fake-obsidian
+abstract class CreatePackageJsonTask : DefaultTask() {
+	@get:OutputFile
+	abstract val outputFile: RegularFileProperty
+
+	@TaskAction
+	fun create() {
+		val packageJsonContent = """
+		{
+		  "name": "obsidian",
+		  "version": "0.0.0-fake",
+		  "description": "Fake Obsidian API for testing",
+		  "main": "obsidian.js",
+		  "type": "commonjs"
+		}
+		""".trimIndent()
+
+		outputFile.get().asFile.parentFile.mkdirs()
+		outputFile.get().asFile.writeText(packageJsonContent)
+	}
+}
+
+tasks.register<CreatePackageJsonTask>("createFakeObsidianPackageJson") {
+	group = "build"
+	description = "Create package.json for fake-obsidian module"
+	outputFile.set(layout.buildDirectory.file("js/node_modules/obsidian/package.json"))
+}
+
+// Task to copy fake-obsidian library to node_modules for testing
+tasks.register<Copy>("copyFakeObsidianForTests") {
+	group = "build"
+	description = "Copy fake-obsidian library to node_modules for testing"
+
+	// Depend on compiling the fake-obsidian library and creating package.json
+	dependsOn(":fake-obsidian:compileProductionLibraryKotlinJs")
+	dependsOn("createFakeObsidianPackageJson")
+
+	// Copy from fake-obsidian build output
+	from("fake-obsidian/build/compileSync/js/main/productionLibrary/kotlin")
+
+	// To the node_modules/obsidian directory
+	into("build/js/node_modules/obsidian")
+
+	// Include the main JS file
+	include("obsidian.js")
+}
+
+// Make test tasks depend on copying the fake obsidian library
+tasks.named("jsTestTestDevelopmentExecutableCompileSync") {
+	dependsOn("copyFakeObsidianForTests")
+}
+
+tasks.named("jsTestTestProductionExecutableCompileSync") {
+	dependsOn("copyFakeObsidianForTests")
+}
