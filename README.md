@@ -5,7 +5,7 @@ This is a Kotlin Multiplatform project targeting Web.
   can add code to the platform-specific folders here too.
 
 * [/webApp](./webApp) contains web React application. It uses the Kotlin/JS library produced
-  by the [shared](./shared) module.
+  by the [shared](./shared) module .
 
 ### Build and Run Web Application
 
