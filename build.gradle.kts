@@ -51,6 +51,12 @@ kotlin {
 			implementation(libs.kotest.framework.engine)
 			implementation(libs.kotest.assertions.core)
 		}
+
+		jsTest.dependencies {
+			// Use fake-obsidian library for testing
+			implementation(project(":fake-obsidian"))
+		}
+
 		jsMain.dependencies {
 			api(kotlin("stdlib-js"))
 			implementation(npm("react", "> 14.0.0 <=16.9.0"))
@@ -126,23 +132,4 @@ tasks.register<Exec>("buildPluginProduction") {
 	} else {
 		commandLine("cp", "shared/build/compileSync/js/main/productionExecutable/kotlin/shared.js", "main.js")
 	}
-}
-
-// Copy fake-obsidian library to node_modules for testing
-tasks.register<Copy>("copyFakeObsidianForTests") {
-	group = "build"
-	description = "Copy fake-obsidian library to node_modules for testing"
-	dependsOn(":fake-obsidian:compileProductionLibraryKotlinJs")
-
-	from("fake-obsidian/build/compileSync/js/main/productionLibrary/kotlin")
-	into("build/js/node_modules/obsidian")
-}
-
-// Make tests depend on fake-obsidian
-tasks.named("jsTestTestDevelopmentExecutableCompileSync") {
-	dependsOn("copyFakeObsidianForTests")
-}
-
-tasks.named("jsTestTestProductionExecutableCompileSync") {
-	dependsOn("copyFakeObsidianForTests")
 }
