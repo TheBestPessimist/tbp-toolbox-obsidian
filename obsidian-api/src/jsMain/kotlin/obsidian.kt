@@ -1,5 +1,6 @@
-// Minimal Obsidian API definitions for Kotlin/JS
-// This file contains only the types needed for the sample plugin
+// Obsidian API definitions for Kotlin/JS
+// External declarations for the Obsidian plugin API
+// This is the single source of truth for Obsidian API types used across the project
 
 @file:JsModule("obsidian")
 
@@ -251,3 +252,4 @@ external class MarkdownView {
     var file: TFile?
     var editor: Editor
 }
+
