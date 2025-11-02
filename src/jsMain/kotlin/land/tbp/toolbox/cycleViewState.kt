@@ -1,8 +1,25 @@
 package land.tbp.toolbox
 
+import jso
+import kotlinx.coroutines.NonCancellable.key
+import obsidian.App
+import obsidian.Hotkey
 import obsidian.MarkdownView
 import obsidian.Notice
 import obsidian.ViewState
+import obsidian.WorkspaceLeaf
+
+fun cycleViewStateForwardCommand(app: App): Command = Command(
+    id = "cycle-view-mode-forward",
+    name = "Cycle view mode forward: Source → Preview → ReadOnly",
+    callback = {
+        val markdownView = app.workspace.getActiveViewOfType(MarkdownView::class.js) ?: return@Command null
+        cycleViewStateCallback(markdownView.leaf)
+    },
+    hotkeys = arrayOf(
+        jso<Hotkey>().apply { modifiers = arrayOf("Mod"); key = "E" }  // TODO tbp: make modifiers an enum
+    )
+)
 
 /**
  * Related:
@@ -10,11 +27,11 @@ import obsidian.ViewState
  * - https://github.com/Signynt/obsidian-editing-mode-hotkey/blob/master/main.ts
  * - https://github.com/dk949/obsidian-mode-manager/blob/trunk/src/main.ts
  */
-fun cycleViewState(markdownView: MarkdownView) {
-    val viewState = markdownView.leaf.getViewState()
+private fun cycleViewStateCallback(leaf: WorkspaceLeaf) {
+    val viewState = leaf.getViewState()
 
     // Only toggle for Markdown views
-    if (viewState.type != "markdown") {
+    if (viewState.type != "markdown") { // todo make this an enum of sorts
         return
     }
 
@@ -25,7 +42,7 @@ fun cycleViewState(markdownView: MarkdownView) {
         source = nextViewState.source
         mode = nextViewState.mode
     }
-    markdownView.leaf.setViewState(viewState)
+    leaf.setViewState(viewState)
     console.log("cycleViewState: $nonRetardedViewState -> $nextViewState")
     Notice(nextViewState.toString())
 }

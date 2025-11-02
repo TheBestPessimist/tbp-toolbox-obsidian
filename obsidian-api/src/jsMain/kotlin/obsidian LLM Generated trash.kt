@@ -11,14 +11,11 @@ import org.w3c.dom.events.Event
 import org.w3c.dom.events.MouseEvent
 import kotlin.js.Promise
 
-/**
- * Type alias for icon names
-  */
 typealias IconName = String
 
 /**
  * Constructor type for creating instances
-  */
+ */
 external interface Constructor<T>
 
 
@@ -41,10 +38,7 @@ external class App {
 }
 
 
-external class Workspace {
-    fun <T> getActiveViewOfType(type: Constructor<T>): T?
-    fun getActiveFile(): TFile?
-    fun iterateAllLeaves(callback: (leaf: WorkspaceLeaf) -> Any)
+open external class Workspace : GoodWorkspace {
     fun getLeaf(newLeaf: Boolean = definedExternally): WorkspaceLeaf
 }
 
@@ -73,7 +67,11 @@ external interface Hotkey {
 }
 
 
-external interface Command {
+@JsName("ICommand")
+external interface ICommand {
+    /**
+     * Globally unique ID to identify this command.
+     */
     var id: String
     var name: String
     var icon: IconName?
@@ -81,9 +79,8 @@ external interface Command {
     var repeatable: Boolean?
     var callback: (() -> Any?)?
     var checkCallback: ((checking: Boolean) -> Boolean)?
-
-    // var editorCallback: ((editor: Editor, ctx: Any) -> Any?)? // todo
-    // var editorCheckCallback: ((checking: Boolean, editor: Editor, ctx: Any) -> Any)? // todo
+    var editorCallback: ((editor: Editor, ctx: Any /* MarkdownView | MarkdownFileInfo */) -> Any)?
+    var editorCheckCallback: ((checking: Boolean, editor: Editor, ctx: Any /* MarkdownView | MarkdownFileInfo */) -> Boolean)?
     var hotkeys: Array<Hotkey>?
 }
 
@@ -97,21 +94,18 @@ external class Editor {
 
 
 open external class Component {
-    fun load()
-    fun unload()
 }
 
 
 open external class Plugin(app: App, manifest: PluginManifest) : Component {
     var app: App
-    var manifest: PluginManifest
 
     open fun onload(): Any
     open fun onunload()
 
     fun addRibbonIcon(icon: IconName, title: String, callback: (evt: MouseEvent) -> Any?): HTMLElement
     fun addStatusBarItem(): HTMLElement
-    fun addCommand(command: Command): Command
+    fun addCommand(ICommand: ICommand): ICommand
     fun addSettingTab(tab: PluginSettingTab)
     fun registerDomEvent(el: dynamic, event: String, callback: (evt: Event) -> Any)
     fun registerInterval(intervalId: Int): Int
@@ -214,14 +208,6 @@ external class Notice(message: String, duration: Int = definedExternally) {
 }
 
 
-external class MarkdownView {
-    var app: App
-    var file: TFile?
-    var editor: Editor
-    var leaf: WorkspaceLeaf
-}
-
-
 external interface ViewState {
     /**
      * todo make this somehow a proper type
@@ -257,24 +243,24 @@ external interface ViewState {
 external class WorkspaceLeaf {
     /**
      * Get the current view state
-          */
+     */
     fun getViewState(): ViewState
 
     /**
      * Set the view state
      * @param viewState - The new view state
      * @param eState - Optional ephemeral state
-          */
+     */
     fun setViewState(viewState: ViewState, eState: Any? = definedExternally): Promise<Unit>
 
     /**
      * Open a file in this leaf
      * @param file - The file to open
-          */
+     */
     fun openFile(file: TFile): Promise<Unit>
 
     /**
      * Detach (close) this leaf
-          */
+     */
     fun detach()
 }

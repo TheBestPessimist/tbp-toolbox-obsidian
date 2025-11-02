@@ -1,11 +1,10 @@
 package land.tbp.toolbox
 
 import obsidian.App
-import obsidian.Command
-import obsidian.Constructor
+import obsidian.Editor
 import obsidian.Hotkey
+import obsidian.ICommand
 import obsidian.IconName
-import obsidian.MarkdownView
 import obsidian.Modal
 import obsidian.Notice
 import obsidian.Plugin
@@ -13,8 +12,6 @@ import obsidian.PluginManifest
 import obsidian.PluginSettingTab
 import obsidian.Setting
 import obsidian.TFile
-import obsidian.ViewState
-import obsidian.WorkspaceLeaf
 import org.w3c.dom.events.MouseEvent
 import kotlin.js.Promise
 
@@ -32,72 +29,86 @@ class DefaultSettings : MyPluginSettings {
     override var mySetting: String = "default"
 }
 
-/**
- * Helper to create Command objects in pure Kotlin
- */
-inline fun command(block: CommandBuilder.() -> Unit): Command {
-    return CommandBuilder().apply(block).build()
-}
+data class Command(
+    override var id: String,
+    override var name: String,
+    override var icon: IconName? = null,
+    override var mobileOnly: Boolean? = null,
+    override var repeatable: Boolean? = null,
+    override var callback: (() -> Any?)? = null,
+    override var checkCallback: ((checking: Boolean) -> Boolean)? = null,
+    override var editorCallback: ((editor: Editor, ctx: Any) -> Any)? = null,
+    override var editorCheckCallback: ((checking: Boolean, editor: Editor, ctx: Any) -> Boolean)? = null,
+    override var hotkeys: Array<Hotkey>? = null,
+) : ICommand
 
-class CommandBuilder {
-    var id: String = ""
-    var name: String = ""
-    var icon: IconName? = null
-    var mobileOnly: Boolean? = null
-    var repeatable: Boolean? = null
-    var callback: (() -> Any?)? = null
 
-    /**
-     * Complex callback, overrides the simple callback.
-     * Used to 'check' whether your command can be performed in the current circumstances.
-     * For example, if your command requires the active focused pane to be a MarkdownView, then
-     * you should only return true if the condition is satisfied. Returning false or undefined causes
-     * the command to be hidden from the command palette.
-     *
-     * @param checking Whether the command palette is just 'checking' if your command should show right now.
-     * If checking is true, then this function should not perform any action.
-     * If checking is false, then this function should perform the action.
-     *
-     * returns Whether this command can be executed at the moment.
-     *
-     *
-     * @sample
-     * ```ts
-     * this.addCommand({
-     *   id: 'example-command',
-     *   name: 'Example command',
-     *   checkCallback: (checking: boolean) => {
-     *     const value = getRequiredValue();
-     *
-     *     if (value) {
-     *       if (!checking) {
-     *         doCommand(value);
-     *       }
-     *       return true;
-     *     }
-     *
-     *     return false;
-     *   }
-     * });
-     * ```
-     */
-    var checkCallback: ((checking: Boolean) -> Boolean)? = null
-    var hotkeys: Array<Hotkey>? = null
+// /**
+//  * Helper to create ICommand objects in pure Kotlin
+//  */
+// inline fun command(block: CommandBuilder.() -> Unit): ICommand {
+//     return CommandBuilder().apply(block).build()
+// }
 
-    fun build(): Command {
-        val cmd = object : Command {
-            override var id: String = this@CommandBuilder.id
-            override var name: String = this@CommandBuilder.name
-            override var icon: IconName? = this@CommandBuilder.icon
-            override var mobileOnly: Boolean? = this@CommandBuilder.mobileOnly
-            override var repeatable: Boolean? = this@CommandBuilder.repeatable
-            override var callback: (() -> Any?)? = this@CommandBuilder.callback
-            override var checkCallback: ((checking: Boolean) -> Boolean)? = this@CommandBuilder.checkCallback
-            override var hotkeys: Array<Hotkey>? = this@CommandBuilder.hotkeys
-        }
-        return cmd
-    }
-}
+// class CommandBuilder {
+//     var id: String = ""
+//     var name: String = ""
+//     var icon: IconName? = null
+//     var mobileOnly: Boolean? = null
+//     var repeatable: Boolean? = null
+//     var callback: (() -> Any?)? = null
+//
+//     /**
+//      * Complex callback, overrides the simple callback.
+//      * Used to 'check' whether your command can be performed in the current circumstances.
+//      * For example, if your command requires the active focused pane to be a MarkdownView, then
+//      * you should only return true if the condition is satisfied. Returning false or undefined causes
+//      * the command to be hidden from the command palette.
+//      *
+//      * @param checking Whether the command palette is just 'checking' if your command should show right now.
+//      * If checking is true, then this function should not perform any action.
+//      * If checking is false, then this function should perform the action.
+//      *
+//      * returns Whether this command can be executed at the moment.
+//      *
+//      *
+//      * @sample
+//      * ```ts
+//      * this.addCommand({
+//      *   id: 'example-command',
+//      *   name: 'Example command',
+//      *   checkCallback: (checking: boolean) => {
+//      *     const value = getRequiredValue();
+//      *
+//      *     if (value) {
+//      *       if (!checking) {
+//      *         doCommand(value);
+//      *       }
+//      *       return true;
+//      *     }
+//      *
+//      *     return false;
+//      *   }
+//      * });
+//      * ```
+//      */
+//     var checkCallback: ((checking: Boolean) -> Boolean)? = null
+//     var hotkeys: Array<Hotkey>? = null
+//
+//     fun build(): ICommand {
+//         val cmd = object : ICommand {
+//             override var id: String = this@CommandBuilder.id
+//             override var name: String = this@CommandBuilder.name
+//             override var icon: IconName? = this@CommandBuilder.icon
+//             override var mobileOnly: Boolean? = this@CommandBuilder.mobileOnly
+//             override var repeatable: Boolean? = this@CommandBuilder.repeatable
+//             override var callback: (() -> Any?)? = this@CommandBuilder.callback
+//             override var checkCallback: ((checking: Boolean) -> Boolean)? = this@CommandBuilder.checkCallback
+//             override var hotkeys: Array<Hotkey>? = this@CommandBuilder.hotkeys
+//         }
+//         return cmd
+//     }
+// }
 
 /**
  * Main plugin class
@@ -145,59 +156,53 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
         // Create modal instance to use in commands
         val sampleModal = SampleModal(app)
 
-        // Add simple command - pure Kotlin
-        addCommand(command {
-            id = "open-sample-modal-simple"
-            name = "Open sample modal (simple)"
-            callback = {
-                sampleModal.open()
-            }
-        })
+        // // Add simple command - pure Kotlin
+        // addCommand(command {
+        //     id = "open-sample-modal-simple"
+        //     name = "Open sample modal (simple)"
+        //     callback = {
+        //         sampleModal.open()
+        //     }
+        // })
 
 
-        // Add complex command with check callback - pure Kotlin
-        addCommand(command {
-            id = "open-sample-modal-complex"
-            name = "Open sample modal (complex)"
-            checkCallback = { checking ->
-                // Get the active MarkdownView using the proper type constructor
-                val markdownView = app.workspace.getActiveViewOfType(MarkdownView::class.js.unsafeCast<Constructor<MarkdownView>>())
-                if (markdownView != null) {
-                    if (!checking) {
-                        sampleModal.open()
-                    }
-                    true
-                } else {
-                    false
-                }
-            }
-        })
+        // // Add complex command with check callback - pure Kotlin
+        // addCommand(command {
+        //     id = "open-sample-modal-complex"
+        //     name = "Open sample modal (complex)"
+        //     checkCallback = { checking ->
+        //         // Get the active MarkdownView using the proper type constructor
+        //         val markdownView = app.workspace.getActiveViewOfType(MarkdownView::class.js)
+        //         if (markdownView != null) {
+        //             if (!checking) {
+        //                 sampleModal.open()
+        //             }
+        //             true
+        //         } else {
+        //             false
+        //         }
+        //     }
+        // })
+
+        // // Add command to toggle view mode: Source → Preview → ReadOnly
+        // addCommand(command {
+        //     id = "toggle-view-mode"
+        //     name = "Toggle view mode (Source → Preview → ReadOnly)"
+        //     checkCallback = fdaasdf()
+        // })
+
 
         // Add command to toggle view mode: Source → Preview → ReadOnly
-        addCommand(command {
-            id = "toggle-view-mode"
-            name = "Toggle view mode (Source → Preview → ReadOnly)"
-            checkCallback = { checking ->
-                val markdownView = app.workspace.getActiveViewOfType(MarkdownView::class.js.unsafeCast<Constructor<MarkdownView>>())
-                if (markdownView != null) {
-                    if (!checking) {
-                        cycleViewState(markdownView)
-                    }
-                    true
-                } else {
-                    false
-                }
-            }
-        })
+        addCommand(cycleViewStateForwardCommand(app))
 
-        // Add command to collect and print all ViewState types
-        addCommand(command {
-            id = "collect-viewstate-types"
-            name = "Collect and print all ViewState types"
-            callback = {
-                collectAndPrintViewStateTypes()
-            }
-        })
+        // // Add command to collect and print all ViewState types
+        // addCommand(command {
+        //     id = "collect-viewstate-types"
+        //     name = "Collect and print all ViewState types"
+        //     callback = {
+        //         collectAndPrintViewStateTypes()
+        //     }
+        // })
 
         // Add settings tab
         addSettingTab(SampleSettingTab(app, this))
@@ -338,6 +343,9 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
         }
     }
 }
+
+
+
 
 
 /**
