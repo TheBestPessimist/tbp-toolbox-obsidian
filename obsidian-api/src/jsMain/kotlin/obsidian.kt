@@ -13,19 +13,15 @@ import kotlin.js.Promise
 
 /**
  * Type alias for icon names
- * @public
- */
+  */
 typealias IconName = String
 
 /**
  * Constructor type for creating instances
- * @public
- */
+  */
 external interface Constructor<T>
 
-/**
- * @public
- */
+
 external interface PluginManifest {
     var id: String
     var name: String
@@ -37,18 +33,14 @@ external interface PluginManifest {
     var isDesktopOnly: Boolean?
 }
 
-/**
- * @public
- */
+
 external class App {
     var workspace: Workspace
     var vault: Vault
     var metadataCache: MetadataCache
 }
 
-/**
- * @public
- */
+
 external class Workspace {
     fun <T> getActiveViewOfType(type: Constructor<T>): T?
     fun getActiveFile(): TFile?
@@ -56,23 +48,17 @@ external class Workspace {
     fun getLeaf(newLeaf: Boolean = definedExternally): WorkspaceLeaf
 }
 
-/**
- * @public
- */
+
 external class Vault {
     fun getFiles(): Array<TFile>
     fun getMarkdownFiles(): Array<TFile>
     fun getAllLoadedFiles(): Array<dynamic>
 }
 
-/**
- * @public
- */
+
 external class MetadataCache
 
-/**
- * @public
- */
+
 external class TFile {
     var path: String
     var name: String
@@ -80,17 +66,13 @@ external class TFile {
     var basename: String
 }
 
-/**
- * @public
- */
+
 external interface Hotkey {
     var modifiers: Array<String>
     var key: String
 }
 
-/**
- * @public
- */
+
 external interface Command {
     var id: String
     var name: String
@@ -98,15 +80,14 @@ external interface Command {
     var mobileOnly: Boolean?
     var repeatable: Boolean?
     var callback: (() -> Any?)?
-    var checkCallback: ((checking: Boolean) -> Any)?
-    var editorCallback: ((editor: Editor, ctx: Any) -> Any?)?
-    var editorCheckCallback: ((checking: Boolean, editor: Editor, ctx: Any) -> Any)?
+    var checkCallback: ((checking: Boolean) -> Boolean)?
+
+    // var editorCallback: ((editor: Editor, ctx: Any) -> Any?)? // todo
+    // var editorCheckCallback: ((checking: Boolean, editor: Editor, ctx: Any) -> Any)? // todo
     var hotkeys: Array<Hotkey>?
 }
 
-/**
- * @public
- */
+
 external class Editor {
     fun getSelection(): String
     fun replaceSelection(replacement: String)
@@ -114,24 +95,20 @@ external class Editor {
     fun setValue(content: String)
 }
 
-/**
- * @public
- */
+
 open external class Component {
     fun load()
     fun unload()
 }
 
-/**
- * @public
- */
+
 open external class Plugin(app: App, manifest: PluginManifest) : Component {
     var app: App
     var manifest: PluginManifest
-    
+
     open fun onload(): Any
     open fun onunload()
-    
+
     fun addRibbonIcon(icon: IconName, title: String, callback: (evt: MouseEvent) -> Any?): HTMLElement
     fun addStatusBarItem(): HTMLElement
     fun addCommand(command: Command): Command
@@ -142,41 +119,35 @@ open external class Plugin(app: App, manifest: PluginManifest) : Component {
     fun saveData(data: Any?): Promise<Unit>
 }
 
-/**
- * @public
- */
+
 open external class Modal(app: App) {
     var app: App
     var contentEl: HTMLElement
-    
+
     open fun onOpen()
     open fun onClose()
     fun open()
     fun close()
 }
 
-/**
- * @public
- */
+
 open external class PluginSettingTab(app: App, plugin: Plugin) {
     var app: App
     var plugin: Plugin
     var containerEl: HTMLElement
-    
+
     open fun display()
     open fun hide()
 }
 
-/**
- * @public
- */
+
 external class Setting(containerEl: HTMLElement) {
     var settingEl: HTMLElement
     var infoEl: HTMLElement
     var nameEl: HTMLElement
     var descEl: HTMLElement
     var controlEl: HTMLElement
-    
+
     fun setName(name: String): Setting
     fun setDesc(desc: String): Setting
     fun setHeading(): Setting
@@ -187,12 +158,10 @@ external class Setting(containerEl: HTMLElement) {
     fun addButton(callback: (button: ButtonComponent) -> Any): Setting
 }
 
-/**
- * @public
- */
+
 external class TextComponent {
     var inputEl: HTMLElement
-    
+
     fun setValue(value: String): TextComponent
     fun getValue(): String
     fun setPlaceholder(placeholder: String): TextComponent
@@ -200,24 +169,20 @@ external class TextComponent {
     fun onChange(callback: (value: String) -> Any): TextComponent
 }
 
-/**
- * @public
- */
+
 external class ToggleComponent {
     var toggleEl: HTMLElement
-    
+
     fun setValue(value: Boolean): ToggleComponent
     fun getValue(): Boolean
     fun setDisabled(disabled: Boolean): ToggleComponent
     fun onChange(callback: (value: Boolean) -> Any): ToggleComponent
 }
 
-/**
- * @public
- */
+
 external class DropdownComponent {
     var selectEl: HTMLElement
-    
+
     fun addOption(value: String, display: String): DropdownComponent
     fun addOptions(options: dynamic): DropdownComponent
     fun setValue(value: String): DropdownComponent
@@ -226,12 +191,10 @@ external class DropdownComponent {
     fun onChange(callback: (value: String) -> Any): DropdownComponent
 }
 
-/**
- * @public
- */
+
 external class ButtonComponent {
     var buttonEl: HTMLElement
-    
+
     fun setButtonText(text: String): ButtonComponent
     fun setIcon(icon: IconName): ButtonComponent
     fun setDisabled(disabled: Boolean): ButtonComponent
@@ -240,84 +203,78 @@ external class ButtonComponent {
     fun onClick(callback: (evt: MouseEvent) -> Any): ButtonComponent
 }
 
-/**
- * @public
- */
+
 external class Notice(message: String, duration: Int = definedExternally) {
     var noticeEl: HTMLElement
     var containerEl: HTMLElement
     var messageEl: HTMLElement
-    
+
     fun setMessage(message: String): Notice
     fun hide()
 }
 
-/**
- * @public
- */
+
 external class MarkdownView {
     var app: App
     var file: TFile?
     var editor: Editor
     var leaf: WorkspaceLeaf
 }
-/**
- * @public
- */
+
+
 external interface ViewState {
     /**
-     * The type of the view (e.g., "markdown", "pdf", etc.)
-     * @public
+     * todo make this somehow a proper type
+     * The type of the current file:
+     * - `.md` -> `markdown`
+     * - `.base` -> `bases`
+     * - `.canvas` -> `canvas`
+     * - `.png` -> `image`
+     * - `.jpg` -> `image`
+     * - `.sns` -> `null`
+     * - `.log` -> `null`
+     * - `.gpx` -> `null`
      */
     var type: String
 
     /**
-     * The state of the view
-     * @public
+     * Technical: This is a dynamic type.
+     * As far as i can see, if i console.log(viewState), it outputs all values, even of those which i don't yet have in my Kotlin code.
+     * Neat!
      */
-    var state: dynamic
+    var state: State
 
-    /**
-     * Whether the view is active
-     * @public
-     */
     var active: Boolean?
 
-    /**
-     * Whether the view is pinned
-     * @public
-     */
     var pinned: Boolean?
+
+    interface State {
+        var mode: String
+        var source: Boolean
+    }
 }
 
-/**
- * @public
- */
 external class WorkspaceLeaf {
     /**
      * Get the current view state
-     * @public
-     */
+          */
     fun getViewState(): ViewState
 
     /**
      * Set the view state
      * @param viewState - The new view state
      * @param eState - Optional ephemeral state
-     * @public
-     */
+          */
     fun setViewState(viewState: ViewState, eState: Any? = definedExternally): Promise<Unit>
 
     /**
      * Open a file in this leaf
      * @param file - The file to open
-     * @public
-     */
+          */
     fun openFile(file: TFile): Promise<Unit>
 
     /**
      * Detach (close) this leaf
-     * @public
-     */
+          */
     fun detach()
 }
