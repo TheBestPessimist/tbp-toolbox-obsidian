@@ -67,8 +67,7 @@ external interface Hotkey {
 }
 
 
-@JsName("ICommand")
-external interface ICommand {
+external interface Command {
     /**
      * Globally unique ID to identify this command.
      */
@@ -105,7 +104,7 @@ open external class Plugin(app: App, manifest: PluginManifest) : Component {
 
     fun addRibbonIcon(icon: IconName, title: String, callback: (evt: MouseEvent) -> Any?): HTMLElement
     fun addStatusBarItem(): HTMLElement
-    fun addCommand(ICommand: ICommand): ICommand
+    fun addCommand(Command: Command): Command
     fun addSettingTab(tab: PluginSettingTab)
     fun registerDomEvent(el: dynamic, event: String, callback: (evt: Event) -> Any)
     fun registerInterval(intervalId: Int): Int
@@ -241,6 +240,8 @@ external interface ViewState {
 }
 
 external class WorkspaceLeaf {
+    fun setPinned(isPinned: Boolean)
+    
     /**
      * Get the current view state
      */

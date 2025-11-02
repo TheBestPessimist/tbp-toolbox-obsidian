@@ -10,6 +10,8 @@ external class MarkdownView : View {
     var leaf: WorkspaceLeaf
 }
 
-open external class GoodWorkspace {
-    fun <T:View> getActiveViewOfType(type: JsClass<T>): T?
+open external class GoodWorkspace : Events {
+    fun <T : View> getActiveViewOfType(type: JsClass<T>): T?
 }
+
+open external class Events

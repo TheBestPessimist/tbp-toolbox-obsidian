@@ -1,10 +1,6 @@
 package land.tbp.toolbox
 
 import obsidian.App
-import obsidian.Editor
-import obsidian.Hotkey
-import obsidian.ICommand
-import obsidian.IconName
 import obsidian.Modal
 import obsidian.Notice
 import obsidian.Plugin
@@ -15,100 +11,14 @@ import obsidian.TFile
 import org.w3c.dom.events.MouseEvent
 import kotlin.js.Promise
 
-/**
- * Settings interface for the plugin1
- */
 interface MyPluginSettings {
     var mySetting: String
 }
 
-/**
- * Default settings implementation
- */
 class DefaultSettings : MyPluginSettings {
     override var mySetting: String = "default"
 }
 
-data class Command(
-    override var id: String,
-    override var name: String,
-    override var icon: IconName? = null,
-    override var mobileOnly: Boolean? = null,
-    override var repeatable: Boolean? = null,
-    override var callback: (() -> Any?)? = null,
-    override var checkCallback: ((checking: Boolean) -> Boolean)? = null,
-    override var editorCallback: ((editor: Editor, ctx: Any) -> Any)? = null,
-    override var editorCheckCallback: ((checking: Boolean, editor: Editor, ctx: Any) -> Boolean)? = null,
-    override var hotkeys: Array<Hotkey>? = null,
-) : ICommand
-
-
-// /**
-//  * Helper to create ICommand objects in pure Kotlin
-//  */
-// inline fun command(block: CommandBuilder.() -> Unit): ICommand {
-//     return CommandBuilder().apply(block).build()
-// }
-
-// class CommandBuilder {
-//     var id: String = ""
-//     var name: String = ""
-//     var icon: IconName? = null
-//     var mobileOnly: Boolean? = null
-//     var repeatable: Boolean? = null
-//     var callback: (() -> Any?)? = null
-//
-//     /**
-//      * Complex callback, overrides the simple callback.
-//      * Used to 'check' whether your command can be performed in the current circumstances.
-//      * For example, if your command requires the active focused pane to be a MarkdownView, then
-//      * you should only return true if the condition is satisfied. Returning false or undefined causes
-//      * the command to be hidden from the command palette.
-//      *
-//      * @param checking Whether the command palette is just 'checking' if your command should show right now.
-//      * If checking is true, then this function should not perform any action.
-//      * If checking is false, then this function should perform the action.
-//      *
-//      * returns Whether this command can be executed at the moment.
-//      *
-//      *
-//      * @sample
-//      * ```ts
-//      * this.addCommand({
-//      *   id: 'example-command',
-//      *   name: 'Example command',
-//      *   checkCallback: (checking: boolean) => {
-//      *     const value = getRequiredValue();
-//      *
-//      *     if (value) {
-//      *       if (!checking) {
-//      *         doCommand(value);
-//      *       }
-//      *       return true;
-//      *     }
-//      *
-//      *     return false;
-//      *   }
-//      * });
-//      * ```
-//      */
-//     var checkCallback: ((checking: Boolean) -> Boolean)? = null
-//     var hotkeys: Array<Hotkey>? = null
-//
-//     fun build(): ICommand {
-//         val cmd = object : ICommand {
-//             override var id: String = this@CommandBuilder.id
-//             override var name: String = this@CommandBuilder.name
-//             override var icon: IconName? = this@CommandBuilder.icon
-//             override var mobileOnly: Boolean? = this@CommandBuilder.mobileOnly
-//             override var repeatable: Boolean? = this@CommandBuilder.repeatable
-//             override var callback: (() -> Any?)? = this@CommandBuilder.callback
-//             override var checkCallback: ((checking: Boolean) -> Boolean)? = this@CommandBuilder.checkCallback
-//             override var hotkeys: Array<Hotkey>? = this@CommandBuilder.hotkeys
-//         }
-//         return cmd
-//     }
-// }
 
 /**
  * Main plugin class
@@ -124,7 +34,7 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
         console.log("Loading MyPlugin in Kotlin!")
 
         // Return a promise for async loading
-        return Promise<Unit> { resolve, reject ->
+        return Promise { resolve, reject ->
             try {
                 // Load settings first
                 loadSettings().then {

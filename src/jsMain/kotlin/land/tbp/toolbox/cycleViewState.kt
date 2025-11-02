@@ -2,22 +2,23 @@ package land.tbp.toolbox
 
 import jso
 import obsidian.App
+import obsidian.Command
 import obsidian.MarkdownView
 import obsidian.Notice
 import obsidian.ViewState
 import obsidian.WorkspaceLeaf
 
-fun cycleViewStateForwardCommand(app: App): Command = Command(
-    id = "cycle-view-mode-forward",
-    name = "Cycle view mode forward: Source → Preview → ReadOnly",
-    callback = {
-        val markdownView = app.workspace.getActiveViewOfType(MarkdownView::class.js) ?: return@Command null
+fun cycleViewStateForwardCommand(app: App): Command = jso {
+    id = "cycle-view-mode-forward"
+    name = "Cycle view mode forward: Source → Preview → ReadOnly"
+    callback = fun() {
+        val markdownView = app.workspace.getActiveViewOfType(MarkdownView::class.js) ?: return
         cycleViewStateCallback(markdownView.leaf)
-    },
+    }
     hotkeys = arrayOf(
         jso { modifiers = arrayOf("Mod"); key = "E" },  // TODO tbp: make modifiers an enum
     )
-)
+}
 
 /**
  * Related:
@@ -40,6 +41,10 @@ private fun cycleViewStateCallback(leaf: WorkspaceLeaf) {
         source = nextViewState.source
         mode = nextViewState.mode
     }
+
+    // TODO tbp: next thing: pin any tab which gets opened: https://docs.obsidian.md/Reference/TypeScript+API/Workspace/on('active-leaf-change')
+    leaf.setPinned(true)
+
     leaf.setViewState(viewState)
     console.log("cycleViewState: $nonRetardedViewState -> $nextViewState")
     Notice(nextViewState.toString())
