@@ -251,5 +251,52 @@ external class MarkdownView {
     var app: App
     var file: TFile?
     var editor: Editor
+    var leaf: WorkspaceLeaf
+}
+/**
+ * @public
+ */
+external interface ViewState {
+    /**
+     * The type of the view (e.g., "markdown", "pdf", etc.)
+     * @public
+     */
+    var type: String
+
+    /**
+     * The state of the view
+     * @public
+     */
+    var state: dynamic
+
+    /**
+     * Whether the view is active
+     * @public
+     */
+    var active: Boolean?
+
+    /**
+     * Whether the view is pinned
+     * @public
+     */
+    var pinned: Boolean?
 }
 
+/**
+ * @public
+ */
+external class WorkspaceLeaf {
+    /**
+     * Get the current view state
+     * @public
+     */
+    fun getViewState(): ViewState
+
+    /**
+     * Set the view state
+     * @param viewState - The new view state
+     * @param eState - Optional ephemeral state
+     * @public
+     */
+    fun setViewState(viewState: ViewState, eState: Any? = definedExternally): Promise<Unit>
+}

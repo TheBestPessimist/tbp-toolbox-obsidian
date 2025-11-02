@@ -135,6 +135,23 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
 			}
 		})
 
+		// Add command to toggle view mode: Source → Preview → ReadOnly
+		addCommand(command {
+			id = "toggle-view-mode"
+			name = "Toggle view mode (Source → Preview → ReadOnly)"
+			checkCallback = { checking ->
+				val markdownView = app.workspace.getActiveViewOfType(MarkdownView::class.js.unsafeCast<Constructor<MarkdownView>>())
+				if (markdownView != null) {
+					if (!checking) {
+						toggleViewMode(markdownView.leaf)
+					}
+					true
+				} else {
+					false
+				}
+			}
+		})
+
 		// Add settings tab
 		addSettingTab(SampleSettingTab(app, this))
 
@@ -159,21 +176,85 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
 			if (data != null) {
 				// Merge loaded data with default settings
 				val defaultSettings = DefaultSettings()
-				settings = mergeSettings(defaultSettings, data.unsafeCast<MyPluginSettings>())
+				settings = mergeSettings(defaultSettings, data)
 			}
 			Unit
 		}
 	}
 
-	private fun mergeSettings(defaults: MyPluginSettings, loaded: MyPluginSettings): MyPluginSettings {
+	private fun mergeSettings(defaults: MyPluginSettings, loaded: Any): MyPluginSettings {
+		// Safely extract the mySetting property from the loaded data
+		val loadedMySetting = try {
+			loaded.asDynamic().mySetting as? String
+		} catch (e: Throwable) {
+			null
+		}
+
 		return object : MyPluginSettings {
-			override var mySetting: String = loaded.mySetting.takeIf { it.isNotEmpty() } ?: defaults.mySetting
+			override var mySetting: String = loadedMySetting?.takeIf { it.isNotEmpty() } ?: defaults.mySetting
 		}
 	}
 
 	fun saveSettings(): Promise<Unit> {
 		return saveData(settings).then {
 			Unit
+		}
+	}
+
+	/**
+	 * Toggle the view mode between Source → Preview → ReadOnly
+	 */
+	private fun toggleViewMode(leaf: WorkspaceLeaf) {
+		val currentState = leaf.getViewState()
+
+		// Only toggle for markdown views
+		if (currentState.type != "markdown") {
+			Notice("This command only works with markdown files")
+			return
+		}
+
+		// Get the current mode from the state (state is already dynamic)
+		val state = currentState.state
+		val currentMode = try {
+			state?.mode as? String ?: "source"
+		} catch (e: Throwable) {
+			"source"
+		}
+
+		// Determine the next mode: source → preview → source (read-only mode)
+		val nextMode = when (currentMode) {
+			"source" -> "preview"
+			"preview" -> "source" // This will be read-only when we set readMode to true
+			else -> "source"
+		}
+
+		// Create a new state object
+		val newState = js("({})")
+		newState.type = "markdown"
+
+		// Create the state property
+		val stateObj = js("({})")
+		stateObj.mode = nextMode
+
+		// For the third state (read-only), we use source mode with readMode flag
+		if (currentMode == "preview") {
+			stateObj.source = true
+			stateObj.readMode = true
+		}
+
+		newState.state = stateObj
+
+		// Set the new view state
+		leaf.setViewState(newState.unsafeCast<ViewState>()).then {
+			val modeDescription = when {
+				nextMode == "preview" -> "Preview"
+				nextMode == "source" && stateObj.readMode == true -> "Read-Only"
+				else -> "Source"
+			}
+			Notice("Switched to $modeDescription mode")
+		}.catch { error ->
+			console.error("Error toggling view mode:", error)
+			Notice("Failed to toggle view mode")
 		}
 	}
 }

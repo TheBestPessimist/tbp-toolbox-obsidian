@@ -32,6 +32,8 @@ open class App {
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 open class Workspace {
+    var activeLeaf: WorkspaceLeaf? = null
+
     fun <T> getActiveViewOfType(type: dynamic): T? = null
     fun getActiveFile(): TFile? = null
 }
@@ -249,4 +251,28 @@ open class MarkdownView {
     var app: App = App()
     var file: TFile? = null
     var editor: Editor = Editor()
+    var leaf: WorkspaceLeaf = WorkspaceLeaf()
+}
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+open class ViewState {
+    var type: String = "markdown"
+    var state: dynamic = null
+    var active: Boolean? = null
+    var pinned: Boolean? = null
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+open class WorkspaceLeaf {
+    private var viewState: ViewState = ViewState()
+
+    fun getViewState(): ViewState {
+        return viewState
+    }
+
+    fun setViewState(viewState: ViewState, eState: Any? = null): Promise<Unit> {
+        this.viewState = viewState
+        return Promise.resolve(Unit)
+    }
 }
