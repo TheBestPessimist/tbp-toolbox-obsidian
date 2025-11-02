@@ -1,9 +1,7 @@
 package land.tbp.toolbox
 
 import jso
-import kotlinx.coroutines.NonCancellable.key
 import obsidian.App
-import obsidian.Hotkey
 import obsidian.MarkdownView
 import obsidian.Notice
 import obsidian.ViewState
@@ -17,7 +15,7 @@ fun cycleViewStateForwardCommand(app: App): Command = Command(
         cycleViewStateCallback(markdownView.leaf)
     },
     hotkeys = arrayOf(
-        jso<Hotkey>().apply { modifiers = arrayOf("Mod"); key = "E" }  // TODO tbp: make modifiers an enum
+        jso { modifiers = arrayOf("Mod"); key = "E" },  // TODO tbp: make modifiers an enum
     )
 )
 

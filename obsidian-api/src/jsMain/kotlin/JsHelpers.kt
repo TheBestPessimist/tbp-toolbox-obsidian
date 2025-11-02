@@ -15,3 +15,6 @@
  */
 @JsName("Object")
 external fun <T : Any> jso(): T
+
+
+fun <T : Any> jso(block: T.() -> Unit): T = jso<T>().apply { block() }
