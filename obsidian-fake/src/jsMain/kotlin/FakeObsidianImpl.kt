@@ -33,14 +33,24 @@ open class App {
 @JsExport
 open class Workspace {
     var activeLeaf: WorkspaceLeaf? = null
+    private val leaves = mutableListOf<WorkspaceLeaf>()
 
     fun <T> getActiveViewOfType(type: dynamic): T? = null
     fun getActiveFile(): TFile? = null
+    fun iterateAllLeaves(callback: (leaf: WorkspaceLeaf) -> Any) {
+        leaves.forEach { callback(it) }
+    }
 }
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
-open class Vault
+open class Vault {
+    private val files = mutableListOf<TFile>()
+
+    fun getFiles(): Array<TFile> = files.toTypedArray()
+    fun getMarkdownFiles(): Array<TFile> = files.filter { it.extension == "md" }.toTypedArray()
+    fun getAllLoadedFiles(): Array<dynamic> = files.toTypedArray()
+}
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -51,6 +61,8 @@ open class MetadataCache
 open class TFile {
     var path: String = ""
     var name: String = ""
+    var extension: String = ""
+    var basename: String = ""
 }
 
 @OptIn(ExperimentalJsExport::class)

@@ -52,12 +52,18 @@ external class App {
 external class Workspace {
     fun <T> getActiveViewOfType(type: Constructor<T>): T?
     fun getActiveFile(): TFile?
+    fun iterateAllLeaves(callback: (leaf: WorkspaceLeaf) -> Any)
+    fun getLeaf(newLeaf: Boolean = definedExternally): WorkspaceLeaf
 }
 
 /**
  * @public
  */
-external class Vault
+external class Vault {
+    fun getFiles(): Array<TFile>
+    fun getMarkdownFiles(): Array<TFile>
+    fun getAllLoadedFiles(): Array<dynamic>
+}
 
 /**
  * @public
@@ -70,6 +76,8 @@ external class MetadataCache
 external class TFile {
     var path: String
     var name: String
+    var extension: String
+    var basename: String
 }
 
 /**
@@ -299,4 +307,17 @@ external class WorkspaceLeaf {
      * @public
      */
     fun setViewState(viewState: ViewState, eState: Any? = definedExternally): Promise<Unit>
+
+    /**
+     * Open a file in this leaf
+     * @param file - The file to open
+     * @public
+     */
+    fun openFile(file: TFile): Promise<Unit>
+
+    /**
+     * Detach (close) this leaf
+     * @public
+     */
+    fun detach()
 }
