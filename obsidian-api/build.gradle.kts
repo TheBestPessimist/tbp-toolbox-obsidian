@@ -35,8 +35,8 @@ kotlin {
 		jsMain {
 			dependencies {
 				api(kotlin("stdlib-js"))
+                implementation(devNpm("obsidian", "latest"))
 			}
 		}
 	}
 }
-
