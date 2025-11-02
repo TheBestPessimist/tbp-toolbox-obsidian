@@ -63,8 +63,6 @@ kotlin {
 			// implementation(devNpm("@typescript-eslint/eslint-plugin", "5.29.0"))
 			// implementation(devNpm("@typescript-eslint/parser", "5.29.0"))
 			// implementation(devNpm("eslint", "^8.0.0"))
-			// implementation(devNpm("@codemirror/state", "6.5.0"))
-			// implementation(devNpm("@codemirror/view", "6.38.1"))
 			// implementation(devNpm("tslib", "2.4.0"))
 			// implementation(devNpm("typescript", "4.7.4"))
 		}
