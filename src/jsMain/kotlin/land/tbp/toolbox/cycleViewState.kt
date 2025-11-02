@@ -29,10 +29,7 @@ fun cycleViewStateForwardCommand(app: App): Command = jso {
 private fun cycleViewStateCallback(leaf: WorkspaceLeaf) {
     val viewState = leaf.getViewState()
 
-    // Only toggle for Markdown views
-    if (viewState.type != "markdown") { // todo make this an enum of sorts
-        return
-    }
+    if (viewState.type != "markdown") return
 
     console.log(viewState)
     val nonRetardedViewState = NonRetardedViewState.valueOf(viewState)
@@ -41,9 +38,6 @@ private fun cycleViewStateCallback(leaf: WorkspaceLeaf) {
         source = nextViewState.source
         mode = nextViewState.mode
     }
-
-    // TODO tbp: next thing: pin any tab which gets opened: https://docs.obsidian.md/Reference/TypeScript+API/Workspace/on('active-leaf-change')
-    leaf.setPinned(true)
 
     leaf.setViewState(viewState)
     console.log("cycleViewState: $nonRetardedViewState -> $nextViewState")

@@ -92,8 +92,6 @@ external class Editor {
 }
 
 
-open external class Component {
-}
 
 
 open external class Plugin(app: App, manifest: PluginManifest) : Component {
@@ -219,6 +217,14 @@ external interface ViewState {
      * - `.sns` -> `null`
      * - `.log` -> `null`
      * - `.gpx` -> `null`
+     *
+     * The tricky part here is that there are other types too. Every possible leaf has a type.
+     * - `git-history-view` - from the git plugin
+     * - `git-view`  - from the git plugin
+     * - `tag` - the obsidian tag
+     * - `footnotes`
+     * - `all-properties`
+     * etc.
      */
     var type: String
 

@@ -105,6 +105,8 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
         // Add command to toggle view mode: Source → Preview → ReadOnly
         addCommand(cycleViewStateForwardCommand(app))
 
+        registerEvent(pinFileOnTabChange(this@MyPlugin.app))
+
         // // Add command to collect and print all ViewState types
         // addCommand(command {
         //     id = "collect-viewstate-types"
@@ -253,6 +255,7 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
         }
     }
 }
+
 
 
 
