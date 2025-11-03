@@ -1,9 +1,11 @@
+package land.tbp.toolbox
+
 /**
  * This is an interesting hack for instantiating JS objects.
  *
  * When i type:
  * ```kotlin
- * val obj = jso<MyInterface>()
+ * val obj = land.tbp.toolbox.jso<MyInterface>()
  * ```
  * what it does is:
  * ```kotlin

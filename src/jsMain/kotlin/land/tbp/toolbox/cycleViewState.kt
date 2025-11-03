@@ -1,6 +1,5 @@
 package land.tbp.toolbox
 
-import jso
 import obsidian.App
 import obsidian.Command
 import obsidian.MarkdownView
