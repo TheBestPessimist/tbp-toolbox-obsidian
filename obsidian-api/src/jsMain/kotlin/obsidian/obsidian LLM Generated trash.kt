@@ -1,9 +1,6 @@
-// Obsidian API definitions for Kotlin/JS
-// External declarations for the Obsidian plugin API
-// This is the single source of truth for Obsidian API types used across the project
+// Obsidian API definitions for Kotlin/JS, generated  by LLMs from obsidian.d.ts
 
 @file:JsModule("obsidian")
-
 package obsidian
 
 import org.w3c.dom.HTMLElement
@@ -13,32 +10,30 @@ import kotlin.js.Promise
 
 typealias IconName = String
 
-/**
- * Constructor type for creating instances
- */
-external interface Constructor<T>
 
 
-external interface PluginManifest {
-    var id: String
-    var name: String
-    var version: String
-    var minAppVersion: String
-    var description: String
-    var author: String
-    var authorUrl: String?
-    var isDesktopOnly: Boolean?
-}
 
-
-external class App {
-    var workspace: Workspace
-    var vault: Vault
-    var metadataCache: MetadataCache
-}
 
 
 open external class Workspace : GoodWorkspace {
+    /**
+     * TODO I'm not sure this works as i expect it to work. The docs are confusing AF!
+     *
+     * getLeaf(newLeaf?: PaneType | boolean): WorkspaceLeaf;
+     *
+     * If newLeaf is false (or not set) then an existing leaf which can be navigated
+     * is returned, or a new leaf will be created if there was no leaf available.
+     *
+     * If newLeaf is `'tab'` or `true` then a new leaf will be created in the preferred
+     * location within the root split and returned.
+     *
+     * If newLeaf is `'split'` then a new leaf will be created adjacent to the currently active leaf.
+     *
+     * If newLeaf is `'window'` then a popout window will be created with a new leaf inside.
+     *
+     * @public
+     * @since 0.16.0
+     */
     fun getLeaf(newLeaf: Boolean = definedExternally): WorkspaceLeaf
 }
 
@@ -50,9 +45,6 @@ external class Vault {
 }
 
 
-external class MetadataCache
-
-
 external class TFile {
     var path: String
     var name: String
@@ -61,27 +53,8 @@ external class TFile {
 }
 
 
-external interface Hotkey {
-    var modifiers: Array<String>
-    var key: String
-}
 
 
-external interface Command {
-    /**
-     * Globally unique ID to identify this command.
-     */
-    var id: String
-    var name: String
-    var icon: IconName?
-    var mobileOnly: Boolean?
-    var repeatable: Boolean?
-    var callback: (() -> Any?)?
-    var checkCallback: ((checking: Boolean) -> Boolean)?
-    var editorCallback: ((editor: Editor, ctx: Any /* MarkdownView | MarkdownFileInfo */) -> Any)?
-    var editorCheckCallback: ((checking: Boolean, editor: Editor, ctx: Any /* MarkdownView | MarkdownFileInfo */) -> Boolean)?
-    var hotkeys: Array<Hotkey>?
-}
 
 
 external class Editor {
