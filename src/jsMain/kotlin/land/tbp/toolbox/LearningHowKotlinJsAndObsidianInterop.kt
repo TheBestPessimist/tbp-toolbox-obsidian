@@ -18,7 +18,7 @@ class DefaultSettings : MyPluginSettings {
  * Main plugin class
  * This is exported via the root-level ObsidianPlugin wrapper class
  */
-class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) {
+open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) {
     var settings: MyPluginSettings = DefaultSettings()
 
     override fun onload(): Promise<Unit> {
