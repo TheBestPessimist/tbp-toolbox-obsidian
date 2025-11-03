@@ -12,7 +12,7 @@ fun cycleViewStateForwardCommand(app: App): Command = jso {
     name = "Cycle view mode forward: Source → Preview → ReadOnly"
     callback = fun() {
         val markdownView = app.workspace.getActiveViewOfType(MarkdownView::class.js) ?: return
-        cycleViewStateCallback(markdownView.leaf)
+        cycleViewStateForwardCallback(markdownView.leaf)
     }
     hotkeys = arrayOf(
         jso { modifiers = arrayOf("Mod"); key = "E" },  // TODO tbp: make modifiers an enum
@@ -25,12 +25,12 @@ fun cycleViewStateForwardCommand(app: App): Command = jso {
  * - https://github.com/Signynt/obsidian-editing-mode-hotkey/blob/master/main.ts
  * - https://github.com/dk949/obsidian-mode-manager/blob/trunk/src/main.ts
  */
-private fun cycleViewStateCallback(leaf: WorkspaceLeaf) {
+private fun cycleViewStateForwardCallback(leaf: WorkspaceLeaf) {
     val viewState = leaf.getViewState()
 
     if (viewState.type != "markdown") return
 
-    console.log(viewState)
+    // console.log(viewState)
     val nonRetardedViewState = NonRetardedViewState.valueOf(viewState)
     val nextViewState = nonRetardedViewState.getNextState()
     viewState.state.apply {
@@ -39,13 +39,42 @@ private fun cycleViewStateCallback(leaf: WorkspaceLeaf) {
     }
 
     leaf.setViewState(viewState)
-    console.log("cycleViewState: $nonRetardedViewState -> $nextViewState")
+    console.log("cycleViewStateForward: $nonRetardedViewState -> $nextViewState")
     Notice(nextViewState.toString())
+}
+
+fun cycleViewStateBackwardCommand(app: App): Command = jso {
+    id = "cycle-view-mode-backward"
+    name = "Cycle view mode backward: ReadOnly → Preview → Source"
+    callback = fun() {
+        val markdownView = app.workspace.getActiveViewOfType(MarkdownView::class.js) ?: return
+        cycleViewStateBackwardCallback(markdownView.leaf)
+    }
+    hotkeys = arrayOf(
+        jso { modifiers = arrayOf("Mod", "Shift"); key = "E" },
+    )
+}
+
+private fun cycleViewStateBackwardCallback(leaf: WorkspaceLeaf) {
+    val viewState = leaf.getViewState()
+
+    if (viewState.type != "markdown") return
+
+    val nonRetardedViewState = NonRetardedViewState.valueOf(viewState)
+    val prevViewState = nonRetardedViewState.getPreviousState()
+    viewState.state.apply {
+        source = prevViewState.source
+        mode = prevViewState.mode
+    }
+
+    leaf.setViewState(viewState)
+    console.log("cycleViewStateBackward: $nonRetardedViewState -> $prevViewState")
+    Notice(prevViewState.toString())
 }
 
 /**
  * The way Obsidian represents the 3 different view states is fucking retarded.
- * So i had to create this fucking enum to deal with this shit.
+ * So I had to create this fucking enum to deal with this shit.
  *
  * - Source mode has `mode="source"` and `source=true`
  * - Preview mode has `mode="source"` and `source=false`
@@ -76,5 +105,11 @@ enum class NonRetardedViewState(val mode: String, val source: Boolean) {
         Source -> Preview
         Preview -> ReadOnly
         ReadOnly -> Source
+    }
+
+    fun getPreviousState(): NonRetardedViewState = when (this) {
+        Source -> ReadOnly
+        Preview -> Source
+        ReadOnly -> Preview
     }
 }

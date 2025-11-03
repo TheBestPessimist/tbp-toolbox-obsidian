@@ -74,8 +74,10 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
 }
 
 fun MyPlugin.setupPlugin() {
-    // Add command to cycle view mode: Source → Preview → ReadOnly
+    // Add command to cycle view mode: Source → Preview → ReadOnly and backwards
     addCommand(cycleViewStateForwardCommand(app))
+    addCommand(cycleViewStateBackwardCommand(app))
+
 
     registerEvent(pinFileOnTabChange(app))
 
