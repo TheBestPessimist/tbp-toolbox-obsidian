@@ -1,13 +1,9 @@
 package land.tbp.toolbox
 
-import land.tbp.toolbox.demostuff.SampleModal
+import land.tbp.toolbox.demostuff.otherDemoFeatures
 import obsidian.App
-import obsidian.Notice
 import obsidian.Plugin
 import obsidian.PluginManifest
-import obsidian.PluginSettingTab
-import obsidian.Setting
-import org.w3c.dom.events.MouseEvent
 import kotlin.js.Promise
 
 interface MyPluginSettings {
@@ -22,11 +18,8 @@ class DefaultSettings : MyPluginSettings {
  * Main plugin class
  * This is exported via the root-level ObsidianPlugin wrapper class
  */
-open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) {
+class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) {
     var settings: MyPluginSettings = DefaultSettings()
-
-    // Set to track all ViewState.type values encountered
-    private val viewStateTypes = mutableSetOf<String>()
 
     override fun onload(): Promise<Unit> {
         console.log("Loading MyPlugin in Kotlin!")
@@ -46,33 +39,6 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
                 console.error("Error in onload:", e)
                 reject(e)
             }
-        }
-    }
-
-    private fun setupPlugin() {
-        // Add ribbon icon
-        val ribbonIconEl = addRibbonIcon("dice", "Sample Plugin") { _evt: MouseEvent ->
-            Notice("This is a notice!")
-        }
-        // Add CSS class to ribbon icon
-        ribbonIconEl.addClass("my-plugin-ribbon-class")
-
-        // Add status bar item
-        val statusBarItemEl = addStatusBarItem()
-        statusBarItemEl.setText("Status Bar Text")
-
-
-        // Add command to toggle view mode: Source → Preview → ReadOnly
-        addCommand(cycleViewStateForwardCommand(app))
-
-        registerEvent(pinFileOnTabChange(this@MyPlugin.app))
-
-        // Add settings tab
-        addSettingTab(SampleSettingTab(app, this))
-
-        // Register DOM event
-        registerDomEvent(kotlinx.browser.document, "click") { evt ->
-            console.log("click", evt)
         }
     }
 
@@ -107,25 +73,12 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
     fun saveSettings(): Promise<Unit> = saveData(settings)
 }
 
-/**
- * Sample Settings Tab - pure Kotlin implementation
- */
-class SampleSettingTab(app: App, val myPlugin: MyPlugin) : PluginSettingTab(app, myPlugin) {
+fun MyPlugin.setupPlugin() {
+    // Add command to cycle view mode: Source → Preview → ReadOnly
+    addCommand(cycleViewStateForwardCommand(app))
 
-    override fun display() {
-        containerEl.empty()
+    registerEvent(pinFileOnTabChange(app))
 
-        Setting(containerEl)
-            .setName("Setting #1")
-            .setDesc("It's a secret")
-            .addText { text ->
-                text
-                    .setPlaceholder("Enter your secret")
-                    .setValue(myPlugin.settings.mySetting)
-                    .onChange { value ->
-                        myPlugin.settings.mySetting = value
-                        myPlugin.saveSettings()
-                    }
-            }
-    }
+    // Add settings tab
+    otherDemoFeatures(app, this)
 }

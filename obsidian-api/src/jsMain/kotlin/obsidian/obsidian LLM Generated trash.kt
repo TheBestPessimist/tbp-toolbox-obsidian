@@ -44,17 +44,7 @@ external class TFile {
     var basename: String
 }
 
-abstract external class Plugin(val app: App, val manifest: PluginManifest) : Component {
-
-    open fun onload(): Promise<Unit>
-    open fun onunload()
-
-    fun addRibbonIcon(icon: IconName, title: String, callback: (evt: MouseEvent) -> Any?): HTMLElement
-    fun addStatusBarItem(): HTMLElement
-    fun addCommand(Command: Command): Command
-    fun addSettingTab(tab: PluginSettingTab)
-    fun registerDomEvent(el: dynamic, event: String, callback: (evt: Event) -> Any)
-    fun registerInterval(intervalId: Int): Int
+abstract external class Plugin(app: App, manifest: PluginManifest) : GoodPlugin {
     fun loadData(): Promise<Any?>
     fun saveData(data: Any?): Promise<Unit>
 }

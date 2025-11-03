@@ -2,6 +2,11 @@
 
 package obsidian
 
+import org.w3c.dom.HTMLElement
+import org.w3c.dom.events.Event
+import org.w3c.dom.events.MouseEvent
+import kotlin.js.Promise
+
 abstract external class View : Component
 
 external class MarkdownView : View {
@@ -41,6 +46,8 @@ open external class Component {
      * Registers an event to be detached when unloading
      */
     fun registerEvent(eventRef: EventRef)
+
+    open fun onunload()
 }
 
 external class App {
@@ -243,4 +250,31 @@ external interface ViewState {
         var mode: String
         var source: Boolean
     }
+}
+
+abstract external class GoodPlugin(val app: App, val manifest: PluginManifest) : Component {
+    open fun onload(): Promise<Unit>
+    fun addRibbonIcon(icon: IconName, title: String, callback: (evt: MouseEvent) -> Unit): HTMLElement
+
+    /**
+     * Adds a status bar item to the bottom of the app.
+     *
+     * Not available on mobile.
+     *
+     * @see `https://docs.obsidian.md/Plugins/User+interface/Status+bar`
+     * @return HTMLElement - element to modify.
+     */
+    fun addStatusBarItem(): HTMLElement
+    fun addCommand(command: Command): Command
+
+    /**
+     * Register a settings tab, which allows users to change settings.
+     *
+     * @see `https://docs.obsidian.md/Plugins/User+interface/Settings#Register+a+settings+tab`
+     */
+    fun addSettingTab(tab: PluginSettingTab)
+
+    // todo DOM events look reaaaaally weird.
+    // fun registerDomEvent()
+
 }
