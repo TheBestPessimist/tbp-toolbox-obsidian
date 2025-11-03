@@ -1,4 +1,5 @@
 @file:JsModule("obsidian")
+
 package obsidian
 
 abstract external class View : Component
@@ -15,7 +16,7 @@ external class MarkdownView : View {
  */
 @Deprecated(
     message = "Do not use this. Use `JsClass<T>` instead.",
-    replaceWith = ReplaceWith("JsClass<T>", "kotlin.js.JsClass")
+    replaceWith = ReplaceWith("JsClass<T>", "kotlin.js.JsClass"),
 )
 typealias Constructor<T> = JsClass<T>
 
@@ -34,7 +35,6 @@ open external class Events
  * Similar to a `hwnd` in Autohotkey.
  */
 external interface EventRef
-
 
 open external class Component {
     /**
@@ -74,6 +74,7 @@ external interface PluginManifest {
     var name: String
     var author: String
     var version: String
+
     /**
      * The minimum required Obsidian version to run this plugin.
      */
@@ -81,28 +82,33 @@ external interface PluginManifest {
     var description: String
     var authorUrl: String?
     var isDesktopOnly: Boolean?
+
     /**
      * Vault path to the plugin folder in the config directory.
      */
     var dir: String?
 }
 
+/**
+ * Icon ID to be used in the toolbar.
+ *
+ * See [https://docs.obsidian.md/Plugins/User+interface/Icons](https://docs.obsidian.md/Plugins/User+interface/Icons) for available icons and how to add your own.
+ */
+typealias IconName = String
+
 external interface Command {
     /**
      * Globally unique ID to identify this command.
      */
     var id: String
+
     /**
      * Human-friendly name for searching.
      */
     var name: String
-    /**
-     * Icon ID to be used in the toolbar.
-     *
-     * See [https://docs.obsidian.md/Plugins/User+interface/Icons](https://docs.obsidian.md/Plugins/User+interface/Icons) for available icons and how to add your own.
-     */
     var icon: IconName?
     var mobileOnly: Boolean?
+
     /**
      * Whether holding the hotkey should repeatedly trigger this command.
      *
@@ -110,6 +116,7 @@ external interface Command {
      */
     var repeatable: Boolean?
     var callback: (() -> Any?)?
+
     /**
      * Complex callback, overrides the simple callback.
      * Used to 'check' whether your command can be performed in the current circumstances.
@@ -145,6 +152,7 @@ external interface Command {
      * @return Whether this command can be executed at the moment.
      */
     var checkCallback: ((checking: Boolean) -> Boolean)?
+
     /**
      * A command callback that is only triggered when the user is in an editor.
      *
@@ -164,6 +172,7 @@ external interface Command {
      * ```
      */
     var editorCallback: ((editor: Editor, ctx: Any /* MarkdownView | MarkdownFileInfo */) -> Any)?
+
     /**
      * A command callback that is only triggered when the user is in an editor.
      *
@@ -196,4 +205,42 @@ external interface Command {
      * Sets the default hotkey.
      */
     var hotkeys: Array<Hotkey>?
+}
+
+external class Editor
+
+external interface ViewState {
+    /**
+     * todo make this somehow a proper type
+     * The type of the current file:
+     * - `.md` -> `markdown`
+     * - `.base` -> `bases`
+     * - `.canvas` -> `canvas`
+     * - `.png` -> `image`
+     * - `.jpg` -> `image`
+     * - `.sns` -> `null`
+     * - `.log` -> `null`
+     * - `.gpx` -> `null`
+     *
+     * The tricky part here is that there are other types too. Every possible leaf has a type.
+     * - `git-history-view` - from the git plugin
+     * - `git-view`  - from the git plugin
+     * - `tag` - the obsidian tag
+     * - `footnotes`
+     * - `all-properties`
+     * etc.
+     */
+    var type: String
+
+    /**
+     * Technical: This is a dynamic type.
+     * As far as i can see, if i console.log(viewState), it outputs all values, even of those which i don't yet have in my Kotlin code.
+     * Neat!
+     */
+    var state: State
+
+    interface State {
+        var mode: String
+        var source: Boolean
+    }
 }

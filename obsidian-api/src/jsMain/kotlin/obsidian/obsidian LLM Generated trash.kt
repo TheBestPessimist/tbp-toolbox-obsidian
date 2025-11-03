@@ -1,19 +1,13 @@
 // Obsidian API definitions for Kotlin/JS, generated  by LLMs from obsidian.d.ts
 
 @file:JsModule("obsidian")
+
 package obsidian
 
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.MouseEvent
 import kotlin.js.Promise
-
-typealias IconName = String
-
-
-
-
-
 
 open external class Workspace : GoodWorkspace {
     /**
@@ -37,13 +31,11 @@ open external class Workspace : GoodWorkspace {
     fun getLeaf(newLeaf: Boolean = definedExternally): WorkspaceLeaf
 }
 
-
 external class Vault {
     fun getFiles(): Array<TFile>
     fun getMarkdownFiles(): Array<TFile>
     fun getAllLoadedFiles(): Array<dynamic>
 }
-
 
 external class TFile {
     var path: String
@@ -52,25 +44,9 @@ external class TFile {
     var basename: String
 }
 
+abstract external class Plugin(val app: App, val manifest: PluginManifest) : Component {
 
-
-
-
-
-external class Editor {
-    fun getSelection(): String
-    fun replaceSelection(replacement: String)
-    fun getValue(): String
-    fun setValue(content: String)
-}
-
-
-
-
-open external class Plugin(app: App, manifest: PluginManifest) : Component {
-    var app: App
-
-    open fun onload(): Any
+    open fun onload(): Promise<Unit>
     open fun onunload()
 
     fun addRibbonIcon(icon: IconName, title: String, callback: (evt: MouseEvent) -> Any?): HTMLElement
@@ -83,7 +59,6 @@ open external class Plugin(app: App, manifest: PluginManifest) : Component {
     fun saveData(data: Any?): Promise<Unit>
 }
 
-
 open external class Modal(app: App) {
     var app: App
     var contentEl: HTMLElement
@@ -94,7 +69,6 @@ open external class Modal(app: App) {
     fun close()
 }
 
-
 open external class PluginSettingTab(app: App, plugin: Plugin) {
     var app: App
     var plugin: Plugin
@@ -103,7 +77,6 @@ open external class PluginSettingTab(app: App, plugin: Plugin) {
     open fun display()
     open fun hide()
 }
-
 
 external class Setting(containerEl: HTMLElement) {
     var settingEl: HTMLElement
@@ -122,7 +95,6 @@ external class Setting(containerEl: HTMLElement) {
     fun addButton(callback: (button: ButtonComponent) -> Any): Setting
 }
 
-
 external class TextComponent {
     var inputEl: HTMLElement
 
@@ -133,7 +105,6 @@ external class TextComponent {
     fun onChange(callback: (value: String) -> Any): TextComponent
 }
 
-
 external class ToggleComponent {
     var toggleEl: HTMLElement
 
@@ -142,7 +113,6 @@ external class ToggleComponent {
     fun setDisabled(disabled: Boolean): ToggleComponent
     fun onChange(callback: (value: Boolean) -> Any): ToggleComponent
 }
-
 
 external class DropdownComponent {
     var selectEl: HTMLElement
@@ -155,7 +125,6 @@ external class DropdownComponent {
     fun onChange(callback: (value: String) -> Any): DropdownComponent
 }
 
-
 external class ButtonComponent {
     var buttonEl: HTMLElement
 
@@ -167,7 +136,6 @@ external class ButtonComponent {
     fun onClick(callback: (evt: MouseEvent) -> Any): ButtonComponent
 }
 
-
 external class Notice(message: String, duration: Int = definedExternally) {
     var noticeEl: HTMLElement
     var containerEl: HTMLElement
@@ -177,50 +145,15 @@ external class Notice(message: String, duration: Int = definedExternally) {
     fun hide()
 }
 
-
-external interface ViewState {
-    /**
-     * todo make this somehow a proper type
-     * The type of the current file:
-     * - `.md` -> `markdown`
-     * - `.base` -> `bases`
-     * - `.canvas` -> `canvas`
-     * - `.png` -> `image`
-     * - `.jpg` -> `image`
-     * - `.sns` -> `null`
-     * - `.log` -> `null`
-     * - `.gpx` -> `null`
-     *
-     * The tricky part here is that there are other types too. Every possible leaf has a type.
-     * - `git-history-view` - from the git plugin
-     * - `git-view`  - from the git plugin
-     * - `tag` - the obsidian tag
-     * - `footnotes`
-     * - `all-properties`
-     * etc.
-     */
-    var type: String
-
-    /**
-     * Technical: This is a dynamic type.
-     * As far as i can see, if i console.log(viewState), it outputs all values, even of those which i don't yet have in my Kotlin code.
-     * Neat!
-     */
-    var state: State
-
-    var active: Boolean?
-
-    var pinned: Boolean?
-
-    interface State {
-        var mode: String
-        var source: Boolean
-    }
-}
-
-external class WorkspaceLeaf {
+external class WorkspaceLeaf : Events {
     fun setPinned(isPinned: Boolean)
-    
+
+    /**
+     * Open a file in this leaf
+     * @param file - The file to open
+     */
+    fun openFile(file: TFile?): Promise<Unit>
+
     /**
      * Get the current view state
      */
@@ -232,12 +165,6 @@ external class WorkspaceLeaf {
      * @param eState - Optional ephemeral state
      */
     fun setViewState(viewState: ViewState, eState: Any? = definedExternally): Promise<Unit>
-
-    /**
-     * Open a file in this leaf
-     * @param file - The file to open
-     */
-    fun openFile(file: TFile): Promise<Unit>
 
     /**
      * Detach (close) this leaf

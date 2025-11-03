@@ -30,7 +30,7 @@ open class MyPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) 
     // Set to track all ViewState.type values encountered
     private val viewStateTypes = mutableSetOf<String>()
 
-    override fun onload(): Any {
+    override fun onload(): Promise<Unit> {
         console.log("Loading MyPlugin in Kotlin!")
 
         // Return a promise for async loading
