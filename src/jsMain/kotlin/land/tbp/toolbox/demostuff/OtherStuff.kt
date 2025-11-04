@@ -1,6 +1,6 @@
 package land.tbp.toolbox.demostuff
 
-import land.tbp.toolbox.MyPlugin
+import land.tbp.toolbox.TbpToolboxPlugin
 import land.tbp.toolbox.addClass
 import land.tbp.toolbox.empty
 import land.tbp.toolbox.setText
@@ -10,8 +10,8 @@ import obsidian.PluginSettingTab
 import obsidian.Setting
 import org.w3c.dom.events.MouseEvent
 
-fun otherDemoFeatures(app: App, plugin: MyPlugin) {
-    plugin.addSettingTab(SampleSettingTab(app, plugin))
+fun otherDemoFeatures(app: App, plugin: TbpToolboxPlugin) {
+    // plugin.addSettingTab(SampleSettingTab(app, plugin))
 
     // Add status bar item
     val statusBarItemEl = plugin.addStatusBarItem()
@@ -34,25 +34,25 @@ fun otherDemoFeatures(app: App, plugin: MyPlugin) {
 /**
  * Sample Settings Tab - pure Kotlin implementation
  */
-class SampleSettingTab(app: App, val myPlugin: MyPlugin) : PluginSettingTab(app, myPlugin) {
-
-    override fun display() {
-        containerEl.empty()
-
-        Setting(containerEl)
-            .setName("Setting #1")
-            .setDesc("It's a secret")
-            .addText { text ->
-                text
-                    .setPlaceholder("Enter your secret")
-                    .setValue(myPlugin.settings.mySetting)
-                    .onChange { value ->
-                        myPlugin.settings.mySetting = value
-                        myPlugin.saveSettings()
-                    }
-            }
-    }
-}
+// class SampleSettingTab(app: App, val tbpToolboxPlugin: TbpToolboxPlugin) : PluginSettingTab(app, tbpToolboxPlugin) {
+//
+//     override fun display() {
+//         containerEl.empty()
+//
+//         Setting(containerEl)
+//             .setName("Setting #1")
+//             .setDesc("It's a secret")
+//             .addText { text ->
+//                 text
+//                     .setPlaceholder("Enter your secret")
+//                     .setValue(tbpToolboxPlugin.settings.mySetting)
+//                     .onChange { value ->
+//                         tbpToolboxPlugin.settings.mySetting = value
+//                         tbpToolboxPlugin.saveSettings()
+//                     }
+//             }
+//     }
+// }
 
 // Create modal instance to use in commands
 // val sampleModal = SampleModal(app)
