@@ -1,5 +1,10 @@
 package land.tbp.toolbox
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.promise
 import obsidian.App
 import obsidian.Plugin
 import obsidian.PluginManifest
@@ -12,16 +17,25 @@ import kotlin.js.Promise
 open class TbpToolboxPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) {
     // var settings: MyPluginSettings = DefaultSettings()
 
+    // Note that using `MainScope()` does not work!
+    private val pluginScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     override fun onload(): Promise<Unit> {
         console.log("Loading TbpToolboxPlugin in Kotlin!")
 
-        return Promise { resolve, reject ->
+        return pluginScope.promise {
             // loadSettings()
             setupPlugin()
+            // delay(10.seconds)
+        }.catch {
+            console.error("Error loading TbpToolboxPlugin", it)
         }
     }
 
-    override fun onunload() = console.log("Unloading TbpToolboxPlugin")
+    override fun onunload() {
+        console.log("Unloading TbpToolboxPlugin")
+        pluginScope.cancel()
+    }
 
     // private fun loadSettings(): Promise<Unit> {
     //     return loadData().then { data ->
