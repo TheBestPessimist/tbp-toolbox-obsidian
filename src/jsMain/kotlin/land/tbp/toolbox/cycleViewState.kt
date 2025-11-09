@@ -1,5 +1,7 @@
 package land.tbp.toolbox
 
+import io.github.oshai.kotlinlogging.KotlinLoggingConfiguration
+import io.github.oshai.kotlinlogging.Level
 import obsidian.App
 import obsidian.Command
 import obsidian.MarkdownView
@@ -41,6 +43,15 @@ private fun cycleViewStateForwardCallback(leaf: WorkspaceLeaf) {
     leaf.setViewState(viewState)
     console.log("cycleViewStateForward: $nonRetardedViewState -> $nextViewState")
     Notice(nextViewState.toString())
+
+
+
+    KotlinLoggingConfiguration.logLevel = Level.TRACE
+    log().log.info { "log info" }
+    // log.trace { "log trace" }
+    // log.debug { "log debug" }
+    // log.error { "log error" }
+    // log.warn { "log warn" }
 }
 
 fun cycleViewStateBackwardCommand(app: App): Command = jso {

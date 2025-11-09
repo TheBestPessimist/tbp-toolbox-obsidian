@@ -44,6 +44,7 @@ kotlin {
 			dependencies {
 				api(kotlin("stdlib"))
 				implementation(libs.kotlinx.coroutines.core)
+                implementation ("io.github.oshai:kotlin-logging:7.0.13")
 			}
 		}
 
