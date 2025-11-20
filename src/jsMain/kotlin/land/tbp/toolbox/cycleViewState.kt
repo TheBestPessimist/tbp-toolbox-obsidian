@@ -39,8 +39,12 @@ private fun cycleViewStateForwardCallback(leaf: WorkspaceLeaf) {
         source = nextViewState.source
         mode = nextViewState.mode
     }
-
     leaf.setViewState(viewState)
+
+    // need to focus after switching from ReadOnly to any other view state. IDK why.
+    // See https://forum.obsidian.md/t/easily-switch-between-source-mode-live-preview-preview/27151/17?u=thebestpessimist
+    (leaf.view as MarkdownView).editor.focus()
+
     console.log("cycleViewStateForward: $nonRetardedViewState -> $nextViewState")
     Notice(nextViewState.toString())
 
@@ -79,6 +83,11 @@ private fun cycleViewStateBackwardCallback(leaf: WorkspaceLeaf) {
     }
 
     leaf.setViewState(viewState)
+
+    // need to focus after switching from ReadOnly to any other view state. IDK why.
+    // See https://forum.obsidian.md/t/easily-switch-between-source-mode-live-preview-preview/27151/17?u=thebestpessimist
+    (leaf.view as MarkdownView).editor.focus()
+
     console.log("cycleViewStateBackward: $nonRetardedViewState -> $prevViewState")
     Notice(prevViewState.toString())
 }

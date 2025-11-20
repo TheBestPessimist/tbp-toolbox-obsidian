@@ -3,15 +3,16 @@
 package obsidian
 
 import org.w3c.dom.HTMLElement
-import org.w3c.dom.events.Event
 import org.w3c.dom.events.MouseEvent
 import kotlin.js.Promise
 
-abstract external class View : Component
-
-external class MarkdownView : View {
+abstract external class View : Component {
     var app: App
     var leaf: WorkspaceLeaf
+}
+
+external class MarkdownView : View {
+    var editor: Editor
 }
 
 /**
@@ -214,7 +215,13 @@ external interface Command {
     var hotkeys: Array<Hotkey>?
 }
 
-external class Editor
+abstract external class Editor {
+    /**
+     * Focus the current editor.
+     * This is needed to have the caret visible to be able to type.
+     */
+    fun focus()
+}
 
 external interface ViewState {
     /**

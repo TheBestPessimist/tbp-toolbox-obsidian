@@ -136,13 +136,15 @@ external class Notice(message: String, duration: Int = definedExternally) {
 }
 
 external class WorkspaceLeaf : Events {
+    var view: View
+
     fun setPinned(isPinned: Boolean)
 
     /**
      * Open a file in this leaf
      * @param file - The file to open
      */
-    fun openFile(file: TFile?): Promise<Unit>
+    fun openFile(file: TFile): Promise<Unit>
 
     /**
      * Get the current view state
