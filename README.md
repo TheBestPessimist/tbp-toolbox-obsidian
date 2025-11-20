@@ -25,3 +25,7 @@ Agent memories:
 - To rebuild or test this Obsidian Kotlin plugin in, run: ./gradlew buildPluginProduction
 - MUST **NOT** start `bash`, or `cmd`, or `pwsh`, just run the gradle command directly.
 ```
+
+
+TODO
+- add a note in https://forum.obsidian.md/t/easily-switch-between-source-mode-live-preview-preview/27151/28 that i implemented this easy toggling.
