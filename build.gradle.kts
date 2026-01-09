@@ -35,8 +35,8 @@ kotlin {
 
 	// this compilerOptions block applies to ALL kotlin source sets in this project
 	compilerOptions {
-		apiVersion = KotlinVersion.KOTLIN_2_2
-		languageVersion = KotlinVersion.KOTLIN_2_2
+		apiVersion = KotlinVersion.KOTLIN_2_3
+		languageVersion = KotlinVersion.KOTLIN_2_3
 	}
 
 	sourceSets {
@@ -75,48 +75,27 @@ kotlin {
 	}
 }
 
-
-
 tasks.wrapper {
 	gradleVersion = "9.1.0"
 	distributionType = Wrapper.DistributionType.ALL
 }
 
-// tasks.register<Exec>("dev") {
-// 	group = "application"
-// 	description = "Compile Kotlin to JS and start the development server"
-// 	workingDir = projectDir
-//
-// 	// 1. Compile Kotlin to JS
-// 	dependsOn("jsBrowserDevelopmentLibraryDistribution")
-//
-// 	// 2. Run npm
-// 	// Detect OS and use appropriate command
-// 	val isWindows = System.getProperty("os.name").lowercase().contains("windows")
-//
-// 	if (isWindows) {
-// 		commandLine("cmd", "/c", "npm install && npm run start")
-// 	} else {
-// 		commandLine("sh", "-c", "npm install && npm run start")
-// 	}
-// }
+tasks.register<Exec>("buildPlugin") {
+	group = "build"
+	description = "Build Obsidian plugin: compile Kotlin to JS and copy to main.js"
+	workingDir = projectDir
 
-// tasks.register<Exec>("buildPlugin") {
-// 	group = "build"
-// 	description = "Build Obsidian plugin: compile Kotlin to JS and copy to main.js"
-// 	workingDir = projectDir
-//
-// 	// 1. Compile Kotlin to JS (development build for faster compilation)
-// 	dependsOn("compileDevelopmentExecutableKotlinJs")
-//
-// 	// 2. Copy the generated shared.js to main.js
-// 	val isWindows = System.getProperty("os.name").lowercase().contains("windows")
-// 	if (isWindows) {
-// 		commandLine("cmd", "/c", "copy", "build\\compileSync\\js\\main\\developmentExecutable\\kotlin\\shared.js", "main.js")
-// 	} else {
-// 		commandLine("cp", "shared/build/compileSync/js/main/developmentExecutable/kotlin/shared.js", "main.js")
-// 	}
-// }
+	// 1. Compile Kotlin to JS (development build for faster compilation)
+	dependsOn("compileDevelopmentExecutableKotlinJs")
+
+	// 2. Copy the generated shared.js to main.js
+	val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+	if (isWindows) {
+		commandLine("cmd", "/c", "copy", "build\\compileSync\\js\\main\\developmentExecutable\\kotlin\\shared.js","D:\\all\\notes\\.obsidian\\plugins\\tbp-toolbox\\main.js")
+	} else {
+		commandLine("cp", "shared/build/compileSync/js/main/developmentExecutable/kotlin/shared.js", "main.js")
+	}
+}
 
 tasks.register<Exec>("buildPluginProduction") {
 	group = "build"

@@ -11,8 +11,8 @@ import obsidian.PluginManifest
 import kotlin.js.Promise
 
 /**
- * Main plugin class
- * This is exported via the root-level ObsidianPlugin wrapper class
+ * Main plugin class.
+ * This is exported via the root-level ObsidianPlugin wrapper class.
  */
 open class TbpToolboxPlugin(app: App, manifest: PluginManifest) : Plugin(app, manifest) {
     // var settings: MyPluginSettings = DefaultSettings()

@@ -30,8 +30,8 @@ kotlin {
 
 	// Apply compiler options to all source sets
 	compilerOptions {
-		apiVersion = KotlinVersion.KOTLIN_2_2
-		languageVersion = KotlinVersion.KOTLIN_2_2
+		apiVersion = KotlinVersion.KOTLIN_2_3
+		languageVersion = KotlinVersion.KOTLIN_2_3
 	}
 
 	sourceSets {

@@ -11,6 +11,7 @@ import obsidian.PluginManifest
  *
  * Since Kotlin/JS @JsExport exports to package namespaces (module.exports.land.tbp.toolbox.default),
  * we create this root-level (no package) class to export at module.exports.default
+ *
  */
 @OptIn(kotlin.js.ExperimentalJsExport::class)
 @JsExport
