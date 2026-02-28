@@ -2,8 +2,8 @@ package land.tbp.augment.cli.session.importer
 
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import land.tbp.node.Fs
-import land.tbp.node.readdirOptions
+import node.fs.ReaddirSyncWithFileTypesOptions
+import node.fs.readdirSync
 
 fun main() {
     val importer = AugmentImporter()
@@ -52,10 +52,10 @@ class AugmentImporter {
 
     private fun traverseWithNodeFs(path: String, indent: Int) {
         val prefix = "    ".repeat(indent)
-        val entries = Fs.readdirSync(path, readdirOptions(withFileTypes = true))
+        val entries = readdirSync(path, ReaddirSyncWithFileTypesOptions(withFileTypes = true))
         entries.forEach { dirent ->
             val isDir = dirent.isDirectory()
-            val suffix = if (isDir) "\\" else ""
+            val suffix = if (isDir) """\""" else ""
             println("$prefix${dirent.name}$suffix")
 
             // Recurse into directories
