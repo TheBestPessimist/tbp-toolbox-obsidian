@@ -21,3 +21,5 @@ include("obsidian-api")
 
 // Include the obsidian-fake subproject (test implementations)
 include("obsidian-fake")
+
+include("Augment-Cli-session-importer")
