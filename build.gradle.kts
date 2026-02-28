@@ -76,7 +76,7 @@ kotlin {
 }
 
 tasks.wrapper {
-	gradleVersion = "9.1.0"
+	gradleVersion = "9.3.1"
 	distributionType = Wrapper.DistributionType.ALL
 }
 
