@@ -24,4 +24,13 @@ kotlin {
     //     apiVersion = KotlinVersion.KOTLIN_2_3
     //     languageVersion = KotlinVersion.KOTLIN_2_3
     // }
+
+    sourceSets {
+        jsMain {
+            dependencies {
+                implementation(kotlin("stdlib-js"))
+                implementation(libs.kotlinx.io.core)
+            }
+        }
+    }
 }
