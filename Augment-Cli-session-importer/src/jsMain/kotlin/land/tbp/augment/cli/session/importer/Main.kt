@@ -2,6 +2,8 @@ package land.tbp.augment.cli.session.importer
 
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import land.tbp.node.Fs
+import land.tbp.node.readdirOptions
 
 fun main() {
     val importer = AugmentImporter()
@@ -50,7 +52,7 @@ class AugmentImporter {
 
     private fun traverseWithNodeFs(path: String, indent: Int) {
         val prefix = "    ".repeat(indent)
-        val entries = NodeFs.readdirSync(path, jsReaddirOptions(withFileTypes = true))
+        val entries = Fs.readdirSync(path, readdirOptions(withFileTypes = true))
         entries.forEach { dirent ->
             val isDir = dirent.isDirectory()
             val suffix = if (isDir) "\\" else ""
@@ -63,34 +65,4 @@ class AugmentImporter {
             }
         }
     }
-}
-
-// Node.js fs module external declarations
-@JsModule("fs")
-@JsNonModule
-external object NodeFs {
-    fun readdirSync(path: String, options: dynamic = definedExternally): Array<Dirent>
-    fun statSync(path: String): Stats
-    fun existsSync(path: String): Boolean
-}
-
-external interface Stats {
-    fun isFile(): Boolean
-    fun isDirectory(): Boolean
-    fun isSymbolicLink(): Boolean
-}
-
-external interface Dirent {
-    val name: String
-    fun isFile(): Boolean
-    fun isDirectory(): Boolean
-    fun isSymbolicLink(): Boolean
-}
-
-// Helper function to create JS options object
-fun jsReaddirOptions(withFileTypes: Boolean = false, encoding: String = "utf8"): dynamic {
-    val options = js("{}")
-    options.withFileTypes = withFileTypes
-    options.encoding = encoding
-    return options
 }

@@ -30,6 +30,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("stdlib-js"))
                 implementation(libs.kotlinx.io.core)
+                implementation(project(":nodejs-api"))
             }
         }
     }

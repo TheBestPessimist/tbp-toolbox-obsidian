@@ -22,4 +22,7 @@ include("obsidian-api")
 // Include the obsidian-fake subproject (test implementations)
 include("obsidian-fake")
 
+// Include the nodejs-api subproject (Node.js API external declarations)
+include("nodejs-api")
+
 include("Augment-Cli-session-importer")
