@@ -1,9 +1,6 @@
 package land.tbp.augment.cli.session.importer
 
-import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.nulls.shouldBeNull
-import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 
@@ -11,17 +8,11 @@ import kotlinx.serialization.json.Json
  * Deserialization tests for AugmentCliSessionDto classes.
  * These tests ensure backwards compatibility when session file formats change.
  */
-class AugmentCliSessionDtoTest : StringSpec({
+class AugmentCliSessionDtoTest : FunSpec({
 
-    val json = Json {
-        ignoreUnknownKeys = true
-    }
+    val json = Json { ignoreUnknownKeys = true }
 
-    // ========================================================================
-    // Session Tests
-    // ========================================================================
-
-    "should deserialize minimal session" {
+    test("should deserialize minimal session") {
         val sessionJson = """
         {
             "sessionId": "test-session-id",
@@ -39,13 +30,29 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val session = json.decodeFromString<Session>(sessionJson)
-        session.sessionId shouldBe "test-session-id"
-        session.customTitle.shouldBeNull()
-        session.terminalId.shouldBeNull()
+        val actual = json.decodeFromString<Session>(sessionJson)
+
+        val expected = Session(
+            sessionId = "test-session-id",
+            created = "2026-01-16T12:00:00.000Z",
+            modified = "2026-01-16T12:30:00.000Z",
+            chatHistory = emptyList(),
+            agentState = AgentState(
+                userGuidelines = "",
+                workspaceGuidelines = "",
+                agentMemories = "",
+                modelId = "claude-opus-4-5",
+                userEmail = "test@example.com"
+            ),
+            rootTaskUuid = "task-uuid-123",
+            customTitle = null,
+            terminalId = null
+        )
+
+        actual shouldBe expected
     }
 
-    "should deserialize session with optional fields" {
+    test("should deserialize session with optional fields") {
         val sessionJson = """
         {
             "sessionId": "test-session-id",
@@ -65,16 +72,29 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val session = json.decodeFromString<Session>(sessionJson)
-        session.customTitle shouldBe "My Custom Session Title"
-        session.terminalId shouldBe "/dev/cons0"
+        val actual = json.decodeFromString<Session>(sessionJson)
+
+        val expected = Session(
+            sessionId = "test-session-id",
+            created = "2026-01-16T12:00:00.000Z",
+            modified = "2026-01-16T12:30:00.000Z",
+            chatHistory = emptyList(),
+            agentState = AgentState(
+                userGuidelines = "Be helpful",
+                workspaceGuidelines = "Follow coding standards",
+                agentMemories = "User prefers Kotlin",
+                modelId = "claude-opus-4-5",
+                userEmail = "test@example.com"
+            ),
+            rootTaskUuid = "task-uuid-123",
+            customTitle = "My Custom Session Title",
+            terminalId = "/dev/cons0"
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // ChatHistory Tests
-    // ========================================================================
-
-    "should deserialize chat history with fractional sequenceId" {
+    test("should deserialize chat history with fractional sequenceId") {
         val chatHistoryJson = """
         {
             "exchange": {
@@ -93,14 +113,31 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val chatHistory = json.decodeFromString<ChatHistory>(chatHistoryJson)
-        chatHistory.sequenceId shouldBe 5.5
-        chatHistory.isHistorySummary.shouldBeNull()
-        chatHistory.historySummaryVersion.shouldBeNull()
-        chatHistory.source.shouldBeNull()
+        val actual = json.decodeFromString<ChatHistory>(chatHistoryJson)
+
+        val expected = ChatHistory(
+            exchange = Exchange(
+                requestMessage = "test",
+                responseText = "response",
+                requestId = "req-123",
+                requestNodes = emptyList(),
+                responseNodes = emptyList()
+            ),
+            completed = true,
+            sequenceId = 5.5,
+            finishedAt = "2026-01-16T12:00:00.000Z",
+            changedFiles = emptyList(),
+            changedFilesSkipped = emptyList(),
+            changedFilesSkippedCount = 0,
+            isHistorySummary = null,
+            historySummaryVersion = null,
+            source = null
+        )
+
+        actual shouldBe expected
     }
 
-    "should deserialize chat history with optional fields" {
+    test("should deserialize chat history with optional fields") {
         val chatHistoryJson = """
         {
             "exchange": {
@@ -122,18 +159,31 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val chatHistory = json.decodeFromString<ChatHistory>(chatHistoryJson)
-        chatHistory.isHistorySummary shouldBe false
-        chatHistory.historySummaryVersion shouldBe 0
-        chatHistory.source shouldBe "local"
-        chatHistory.changedFiles shouldHaveSize 1
+        val actual = json.decodeFromString<ChatHistory>(chatHistoryJson)
+
+        val expected = ChatHistory(
+            exchange = Exchange(
+                requestMessage = "test",
+                responseText = "response",
+                requestId = "req-123",
+                requestNodes = emptyList(),
+                responseNodes = emptyList()
+            ),
+            completed = true,
+            sequenceId = 1.0,
+            finishedAt = "2026-01-16T12:00:00.000Z",
+            changedFiles = listOf("file1.kt"),
+            changedFilesSkipped = listOf("file2.kt"),
+            changedFilesSkippedCount = 1,
+            isHistorySummary = false,
+            historySummaryVersion = 0,
+            source = "local"
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // RequestNode Tests - Type 0 (Text)
-    // ========================================================================
-
-    "should deserialize request node type 0 - text node" {
+    test("should deserialize request node type 0 - text node") {
         val requestNodeJson = """
         {
             "id": 1,
@@ -144,20 +194,20 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<RequestNode>(requestNodeJson)
-        node.id shouldBe 1
-        node.type shouldBe 0
-        node.textNode.shouldNotBeNull()
-        node.textNode!!.content shouldBe "Hello, this is the user's message"
-        node.toolResultNode.shouldBeNull()
-        node.ideStateNode.shouldBeNull()
+        val actual = json.decodeFromString<RequestNode>(requestNodeJson)
+
+        val expected = RequestNode(
+            id = 1,
+            type = 0,
+            textNode = TextNode(content = "Hello, this is the user's message"),
+            toolResultNode = null,
+            ideStateNode = null
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // RequestNode Tests - Type 1 (ToolResult)
-    // ========================================================================
-
-    "should deserialize request node type 1 - tool result node minimal" {
+    test("should deserialize request node type 1 - tool result node minimal") {
         val requestNodeJson = """
         {
             "id": 1,
@@ -170,17 +220,28 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<RequestNode>(requestNodeJson)
-        node.type shouldBe 1
-        node.toolResultNode.shouldNotBeNull()
-        node.toolResultNode!!.toolUseId shouldBe "toolu_vrtx_01ABC123"
-        node.toolResultNode!!.content shouldBe "Here's the file content..."
-        node.toolResultNode!!.isError shouldBe false
-        node.toolResultNode!!.durationMs.shouldBeNull()
-        node.toolResultNode!!.metadata.shouldBeNull()
+        val actual = json.decodeFromString<RequestNode>(requestNodeJson)
+
+        val expected = RequestNode(
+            id = 1,
+            type = 1,
+            textNode = null,
+            toolResultNode = ToolResultNode(
+                toolUseId = "toolu_vrtx_01ABC123",
+                content = "Here's the file content...",
+                isError = false,
+                durationMs = null,
+                startTimeMs = null,
+                requestId = null,
+                metadata = null
+            ),
+            ideStateNode = null
+        )
+
+        actual shouldBe expected
     }
 
-    "should deserialize request node type 1 - tool result node with all fields" {
+    test("should deserialize request node type 1 - tool result node with all fields") {
         val requestNodeJson = """
         {
             "id": 1,
@@ -200,17 +261,28 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<RequestNode>(requestNodeJson)
-        node.toolResultNode.shouldNotBeNull()
-        node.toolResultNode!!.durationMs shouldBe 410
-        node.toolResultNode!!.startTimeMs shouldBe 1772197681596
-        node.toolResultNode!!.requestId shouldBe "req-456"
-        node.toolResultNode!!.metadata.shouldNotBeNull()
-        node.toolResultNode!!.metadata!!.toolLinesAdded shouldBe 15
-        node.toolResultNode!!.metadata!!.toolLinesDeleted shouldBe 3
+        val actual = json.decodeFromString<RequestNode>(requestNodeJson)
+
+        val expected = RequestNode(
+            id = 1,
+            type = 1,
+            textNode = null,
+            toolResultNode = ToolResultNode(
+                toolUseId = "toolu_vrtx_01ABC123",
+                content = "File edited successfully",
+                isError = false,
+                durationMs = 410,
+                startTimeMs = 1772197681596,
+                requestId = "req-456",
+                metadata = ToolResultMetadata(toolLinesAdded = 15, toolLinesDeleted = 3)
+            ),
+            ideStateNode = null
+        )
+
+        actual shouldBe expected
     }
 
-    "should deserialize request node type 1 - tool result with error" {
+    test("should deserialize request node type 1 - tool result with error") {
         val requestNodeJson = """
         {
             "id": 1,
@@ -225,15 +297,28 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<RequestNode>(requestNodeJson)
-        node.toolResultNode!!.isError shouldBe true
+        val actual = json.decodeFromString<RequestNode>(requestNodeJson)
+
+        val expected = RequestNode(
+            id = 1,
+            type = 1,
+            textNode = null,
+            toolResultNode = ToolResultNode(
+                toolUseId = "toolu_vrtx_01XYZ789",
+                content = "Command not found: obsidian",
+                isError = true,
+                durationMs = 699,
+                startTimeMs = 1772213615599,
+                requestId = null,
+                metadata = null
+            ),
+            ideStateNode = null
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // RequestNode Tests - Type 4 (IdeState)
-    // ========================================================================
-
-    "should deserialize request node type 4 - ide state node" {
+    test("should deserialize request node type 4 - ide state node") {
         val requestNodeJson = """
         {
             "id": 2,
@@ -254,21 +339,32 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<RequestNode>(requestNodeJson)
-        node.type shouldBe 4
-        node.ideStateNode.shouldNotBeNull()
-        node.ideStateNode!!.workspaceFolders shouldHaveSize 1
-        node.ideStateNode!!.workspaceFolders[0].repositoryRoot shouldBe "d:\\all\\work\\MyProject"
-        node.ideStateNode!!.workspaceFoldersUnchanged shouldBe false
-        node.ideStateNode!!.currentTerminal.terminalId shouldBe 0
-        node.ideStateNode!!.currentTerminal.currentWorkingDirectory shouldBe "d:\\all\\work\\MyProject"
+        val actual = json.decodeFromString<RequestNode>(requestNodeJson)
+
+        val expected = RequestNode(
+            id = 2,
+            type = 4,
+            textNode = null,
+            toolResultNode = null,
+            ideStateNode = IdeStateNode(
+                workspaceFolders = listOf(
+                    WorkspaceFolder(
+                        repositoryRoot = "d:\\all\\work\\MyProject",
+                        folderRoot = "d:\\all\\work\\MyProject"
+                    )
+                ),
+                workspaceFoldersUnchanged = false,
+                currentTerminal = CurrentTerminal(
+                    terminalId = 0,
+                    currentWorkingDirectory = "d:\\all\\work\\MyProject"
+                )
+            )
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // ResponseNode Tests - Type 0 (Text)
-    // ========================================================================
-
-    "should deserialize response node type 0 - text content" {
+    test("should deserialize response node type 0 - text content") {
         val responseNodeJson = """
         {
             "id": 1,
@@ -287,21 +383,24 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<ResponseNode>(responseNodeJson)
-        node.type shouldBe 0
-        node.content shouldBe "Here is the response from the LLM"
-        node.toolUse.shouldBeNull()
-        node.thinking.shouldBeNull()
-        node.metadata.shouldNotBeNull()
-        node.metadata!!.provider shouldBe "anthropic"
-        node.timestampMs shouldBe 1772197681581
+        val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
+
+        val expected = ResponseNode(
+            id = 1,
+            type = 0,
+            content = "Here is the response from the LLM",
+            toolUse = null,
+            thinking = null,
+            billingMetadata = null,
+            metadata = Metadata(openaiId = null, googleTs = null, provider = "anthropic", phase = null),
+            tokenUsage = null,
+            timestampMs = 1772197681581
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // ResponseNode Tests - Type 5 (ToolUse)
-    // ========================================================================
-
-    "should deserialize response node type 5 - tool use minimal" {
+    test("should deserialize response node type 5 - tool use minimal") {
         val responseNodeJson = """
         {
             "id": 1,
@@ -320,18 +419,31 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<ResponseNode>(responseNodeJson)
-        node.type shouldBe 5
-        node.toolUse.shouldNotBeNull()
-        node.toolUse!!.toolUseId shouldBe "toolu_vrtx_01ABC123"
-        node.toolUse!!.toolName shouldBe "view"
-        node.toolUse!!.inputJson shouldBe "{\"path\": \".\", \"type\": \"directory\"}"
-        node.toolUse!!.isPartial shouldBe false
-        node.toolUse!!.startedAtMs.shouldBeNull()
-        node.toolUse!!.completedAtMs.shouldBeNull()
+        val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
+
+        val expected = ResponseNode(
+            id = 1,
+            type = 5,
+            content = "",
+            toolUse = ToolUse(
+                toolUseId = "toolu_vrtx_01ABC123",
+                toolName = "view",
+                inputJson = """{"path": ".", "type": "directory"}""",
+                isPartial = false,
+                startedAtMs = null,
+                completedAtMs = null
+            ),
+            thinking = null,
+            billingMetadata = null,
+            metadata = null,
+            tokenUsage = null,
+            timestampMs = null
+        )
+
+        actual shouldBe expected
     }
 
-    "should deserialize response node type 5 - tool use with timing" {
+    test("should deserialize response node type 5 - tool use with timing") {
         val responseNodeJson = """
         {
             "id": 1,
@@ -352,16 +464,31 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<ResponseNode>(responseNodeJson)
-        node.toolUse!!.startedAtMs shouldBe 1772197681596
-        node.toolUse!!.completedAtMs shouldBe 1772197682006
+        val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
+
+        val expected = ResponseNode(
+            id = 1,
+            type = 5,
+            content = "",
+            toolUse = ToolUse(
+                toolUseId = "toolu_vrtx_01ABC123",
+                toolName = "launch-process",
+                inputJson = """{"command": "Get-Date", "cwd": "d:\\all\\notes", "wait": true}""",
+                isPartial = false,
+                startedAtMs = 1772197681596,
+                completedAtMs = 1772197682006
+            ),
+            thinking = null,
+            billingMetadata = null,
+            metadata = Metadata(openaiId = null, googleTs = null, provider = null, phase = null),
+            tokenUsage = null,
+            timestampMs = null
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // ResponseNode Tests - Type 8 (Thinking)
-    // ========================================================================
-
-    "should deserialize response node type 8 - thinking" {
+    test("should deserialize response node type 8 - thinking") {
         val responseNodeJson = """
         {
             "id": 0,
@@ -369,7 +496,7 @@ class AugmentCliSessionDtoTest : StringSpec({
             "content": "",
             "tool_use": null,
             "thinking": {
-                "summary": "The user wants me to see a TODO file. Let me search for it.",
+                "summary": "The user wants me to see a TODO file.",
                 "encrypted_content": "EsECCkgICxACGAIqQKwV9Ej8245MvW4...",
                 "content": null,
                 "openai_responses_api_item_id": null
@@ -385,16 +512,29 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<ResponseNode>(responseNodeJson)
-        node.type shouldBe 8
-        node.thinking.shouldNotBeNull()
-        node.thinking!!.summary shouldBe "The user wants me to see a TODO file. Let me search for it."
-        node.thinking!!.encryptedContent shouldBe "EsECCkgICxACGAIqQKwV9Ej8245MvW4..."
-        node.thinking!!.content.shouldBeNull()
-        node.thinking!!.openaiResponsesApiItemId.shouldBeNull()
+        val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
+
+        val expected = ResponseNode(
+            id = 0,
+            type = 8,
+            content = "",
+            toolUse = null,
+            thinking = Thinking(
+                summary = "The user wants me to see a TODO file.",
+                encryptedContent = "EsECCkgICxACGAIqQKwV9Ej8245MvW4...",
+                content = null,
+                openaiResponsesApiItemId = null
+            ),
+            billingMetadata = null,
+            metadata = Metadata(openaiId = null, googleTs = null, provider = "anthropic", phase = null),
+            tokenUsage = null,
+            timestampMs = 1772197680810
+        )
+
+        actual shouldBe expected
     }
 
-    "should deserialize thinking with decrypted content" {
+    test("should deserialize thinking with decrypted content") {
         val thinkingJson = """
         {
             "summary": "Analyzing the code",
@@ -404,16 +544,19 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val thinking = json.decodeFromString<Thinking>(thinkingJson)
-        thinking.content shouldBe "This is the decrypted thinking content"
-        thinking.openaiResponsesApiItemId shouldBe "resp_abc123"
+        val actual = json.decodeFromString<Thinking>(thinkingJson)
+
+        val expected = Thinking(
+            summary = "Analyzing the code",
+            encryptedContent = "encrypted...",
+            content = "This is the decrypted thinking content",
+            openaiResponsesApiItemId = "resp_abc123"
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // ResponseNode Tests - Type 10 (TokenUsage)
-    // ========================================================================
-
-    "should deserialize response node type 10 - token usage" {
+    test("should deserialize response node type 10 - token usage") {
         val responseNodeJson = """
         {
             "id": 1,
@@ -440,23 +583,36 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val node = json.decodeFromString<ResponseNode>(responseNodeJson)
-        node.type shouldBe 10
-        node.tokenUsage.shouldNotBeNull()
-        node.tokenUsage!!.inputTokens shouldBe 9
-        node.tokenUsage!!.outputTokens shouldBe 171
-        node.tokenUsage!!.cacheReadInputTokens shouldBe 9986
-        node.tokenUsage!!.cacheCreationInputTokens shouldBe 549
-        node.tokenUsage!!.systemPromptTokens shouldBe 4087
-        node.tokenUsage!!.chatHistoryTokens shouldBe 0
-        node.tokenUsage!!.currentMessageTokens shouldBe 20
-        node.tokenUsage!!.maxContextTokens shouldBe 204800
-        node.tokenUsage!!.toolDefinitionsTokens shouldBe 7387
-        node.tokenUsage!!.toolResultTokens shouldBe 0
-        node.tokenUsage!!.assistantResponseTokens shouldBe 171
+        val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
+
+        val expected = ResponseNode(
+            id = 1,
+            type = 10,
+            content = "",
+            toolUse = null,
+            thinking = null,
+            billingMetadata = null,
+            metadata = null,
+            tokenUsage = TokenUsage(
+                inputTokens = 9,
+                outputTokens = 171,
+                cacheReadInputTokens = 9986,
+                cacheCreationInputTokens = 549,
+                systemPromptTokens = 4087,
+                chatHistoryTokens = 0,
+                currentMessageTokens = 20,
+                maxContextTokens = 204800,
+                toolDefinitionsTokens = 7387,
+                toolResultTokens = 0,
+                assistantResponseTokens = 171
+            ),
+            timestampMs = 1772197681579
+        )
+
+        actual shouldBe expected
     }
 
-    "should deserialize token usage with optional fields missing" {
+    test("should deserialize token usage with optional fields missing") {
         val tokenUsageJson = """
         {
             "input_tokens": 10,
@@ -470,18 +626,26 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val tokenUsage = json.decodeFromString<TokenUsage>(tokenUsageJson)
-        tokenUsage.inputTokens shouldBe 10
-        tokenUsage.toolDefinitionsTokens.shouldBeNull()
-        tokenUsage.toolResultTokens.shouldBeNull()
-        tokenUsage.assistantResponseTokens.shouldBeNull()
+        val actual = json.decodeFromString<TokenUsage>(tokenUsageJson)
+
+        val expected = TokenUsage(
+            inputTokens = 10,
+            outputTokens = 50,
+            cacheReadInputTokens = 1000,
+            cacheCreationInputTokens = 100,
+            systemPromptTokens = 500,
+            chatHistoryTokens = 200,
+            currentMessageTokens = 30,
+            maxContextTokens = 100000,
+            toolDefinitionsTokens = null,
+            toolResultTokens = null,
+            assistantResponseTokens = null
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // Metadata Tests
-    // ========================================================================
-
-    "should deserialize metadata with all fields" {
+    test("should deserialize metadata with all fields") {
         val metadataJson = """
         {
             "openai_id": "chatcmpl-abc123",
@@ -491,14 +655,19 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val metadata = json.decodeFromString<Metadata>(metadataJson)
-        metadata.openaiId shouldBe "chatcmpl-abc123"
-        metadata.googleTs shouldBe "2026-01-16T12:00:00Z"
-        metadata.provider shouldBe "anthropic"
-        metadata.phase shouldBe "generation"
+        val actual = json.decodeFromString<Metadata>(metadataJson)
+
+        val expected = Metadata(
+            openaiId = "chatcmpl-abc123",
+            googleTs = "2026-01-16T12:00:00Z",
+            provider = "anthropic",
+            phase = "generation"
+        )
+
+        actual shouldBe expected
     }
 
-    "should deserialize metadata with all null fields" {
+    test("should deserialize metadata with all null fields") {
         val metadataJson = """
         {
             "openai_id": null,
@@ -508,18 +677,19 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val metadata = json.decodeFromString<Metadata>(metadataJson)
-        metadata.openaiId.shouldBeNull()
-        metadata.googleTs.shouldBeNull()
-        metadata.provider.shouldBeNull()
-        metadata.phase.shouldBeNull()
+        val actual = json.decodeFromString<Metadata>(metadataJson)
+
+        val expected = Metadata(
+            openaiId = null,
+            googleTs = null,
+            provider = null,
+            phase = null
+        )
+
+        actual shouldBe expected
     }
 
-    // ========================================================================
-    // Full Session Integration Test
-    // ========================================================================
-
-    "should deserialize full session with all node types" {
+    test("should deserialize full session with all node types") {
         val fullSessionJson = """
         {
             "sessionId": "full-test-session",
@@ -601,50 +771,6 @@ class AugmentCliSessionDtoTest : StringSpec({
                     "changedFilesSkipped": [],
                     "changedFilesSkippedCount": 0,
                     "source": "local"
-                },
-                {
-                    "exchange": {
-                        "request_message": "",
-                        "response_text": "File viewed successfully",
-                        "request_id": "req-002",
-                        "request_nodes": [
-                            {
-                                "id": 1,
-                                "type": 4,
-                                "ide_state_node": {
-                                    "workspace_folders": [
-                                        { "repository_root": "d:\\project", "folder_root": "d:\\project" }
-                                    ],
-                                    "workspace_folders_unchanged": true,
-                                    "current_terminal": { "terminal_id": 0, "current_working_directory": "d:\\project" }
-                                }
-                            },
-                            {
-                                "id": 1,
-                                "type": 1,
-                                "tool_result_node": {
-                                    "tool_use_id": "toolu_001",
-                                    "content": "TODO.txt contents here...",
-                                    "is_error": false,
-                                    "duration_ms": 50
-                                }
-                            }
-                        ],
-                        "response_nodes": [
-                            {
-                                "id": 1,
-                                "type": 0,
-                                "content": "File viewed successfully",
-                                "metadata": { "provider": "anthropic" }
-                            }
-                        ]
-                    },
-                    "completed": true,
-                    "sequenceId": 2,
-                    "finishedAt": "2026-01-16T12:10:00.000Z",
-                    "changedFiles": [],
-                    "changedFilesSkipped": [],
-                    "changedFilesSkippedCount": 0
                 }
             ],
             "agentState": {
@@ -659,41 +785,95 @@ class AugmentCliSessionDtoTest : StringSpec({
         }
         """.trimIndent()
 
-        val session = json.decodeFromString<Session>(fullSessionJson)
+        val actual = json.decodeFromString<Session>(fullSessionJson)
 
-        // Verify session level
-        session.sessionId shouldBe "full-test-session"
-        session.customTitle shouldBe "TODO File Review"
-        session.chatHistory shouldHaveSize 2
+        val expected = Session(
+            sessionId = "full-test-session",
+            created = "2026-01-16T12:00:00.000Z",
+            modified = "2026-01-16T12:30:00.000Z",
+            chatHistory = listOf(
+                ChatHistory(
+                    exchange = Exchange(
+                        requestMessage = "See TODO",
+                        responseText = "Here is the TODO file content",
+                        requestId = "req-001",
+                        requestNodes = listOf(
+                            RequestNode(
+                                id = 1, type = 0,
+                                textNode = TextNode(content = "See TODO"),
+                                toolResultNode = null, ideStateNode = null
+                            ),
+                            RequestNode(
+                                id = 2, type = 4,
+                                textNode = null, toolResultNode = null,
+                                ideStateNode = IdeStateNode(
+                                    workspaceFolders = listOf(
+                                        WorkspaceFolder(repositoryRoot = "d:\\project", folderRoot = "d:\\project")
+                                    ),
+                                    workspaceFoldersUnchanged = false,
+                                    currentTerminal = CurrentTerminal(terminalId = 0, currentWorkingDirectory = "d:\\project")
+                                )
+                            )
+                        ),
+                        responseNodes = listOf(
+                            ResponseNode(
+                                id = 0, type = 8, content = "",
+                                toolUse = null,
+                                thinking = Thinking(summary = "Looking for TODO file", encryptedContent = "encrypted..."),
+                                billingMetadata = null,
+                                metadata = Metadata(provider = "anthropic"),
+                                tokenUsage = null, timestampMs = null
+                            ),
+                            ResponseNode(
+                                id = 1, type = 5, content = "",
+                                toolUse = ToolUse(
+                                    toolUseId = "toolu_001", toolName = "view",
+                                    inputJson = """{"path": "TODO.txt"}""", isPartial = false
+                                ),
+                                thinking = null, billingMetadata = null, metadata = null, tokenUsage = null, timestampMs = null
+                            ),
+                            ResponseNode(
+                                id = 2, type = 10, content = "",
+                                toolUse = null, thinking = null, billingMetadata = null, metadata = null,
+                                tokenUsage = TokenUsage(
+                                    inputTokens = 100, outputTokens = 200,
+                                    cacheReadInputTokens = 5000, cacheCreationInputTokens = 500,
+                                    systemPromptTokens = 4000, chatHistoryTokens = 100,
+                                    currentMessageTokens = 50, maxContextTokens = 200000
+                                ),
+                                timestampMs = null
+                            ),
+                            ResponseNode(
+                                id = 3, type = 0, content = "Here is the TODO file content",
+                                toolUse = null, thinking = null, billingMetadata = null,
+                                metadata = Metadata(provider = "anthropic"),
+                                tokenUsage = null, timestampMs = null
+                            )
+                        )
+                    ),
+                    completed = true,
+                    sequenceId = 1.0,
+                    finishedAt = "2026-01-16T12:05:00.000Z",
+                    changedFiles = emptyList(),
+                    changedFilesSkipped = emptyList(),
+                    changedFilesSkippedCount = 0,
+                    isHistorySummary = null,
+                    historySummaryVersion = null,
+                    source = "local"
+                )
+            ),
+            agentState = AgentState(
+                userGuidelines = "Be helpful",
+                workspaceGuidelines = "",
+                agentMemories = "",
+                modelId = "claude-opus-4-5",
+                userEmail = "test@example.com"
+            ),
+            rootTaskUuid = "root-task-uuid",
+            customTitle = "TODO File Review",
+            terminalId = null
+        )
 
-        // Verify first chat history entry
-        val firstChat = session.chatHistory[0]
-        firstChat.exchange.requestNodes shouldHaveSize 2
-        firstChat.exchange.responseNodes shouldHaveSize 4
-        firstChat.source shouldBe "local"
-
-        // Verify request nodes
-        firstChat.exchange.requestNodes[0].type shouldBe 0
-        firstChat.exchange.requestNodes[0].textNode!!.content shouldBe "See TODO"
-        firstChat.exchange.requestNodes[1].type shouldBe 4
-        firstChat.exchange.requestNodes[1].ideStateNode!!.workspaceFoldersUnchanged shouldBe false
-
-        // Verify response nodes
-        firstChat.exchange.responseNodes[0].type shouldBe 8  // Thinking
-        firstChat.exchange.responseNodes[0].thinking!!.summary shouldBe "Looking for TODO file"
-        firstChat.exchange.responseNodes[1].type shouldBe 5  // ToolUse
-        firstChat.exchange.responseNodes[1].toolUse!!.toolName shouldBe "view"
-        firstChat.exchange.responseNodes[2].type shouldBe 10 // TokenUsage
-        firstChat.exchange.responseNodes[2].tokenUsage!!.inputTokens shouldBe 100
-        firstChat.exchange.responseNodes[3].type shouldBe 0  // Text
-
-        // Verify second chat history entry with tool result
-        val secondChat = session.chatHistory[1]
-        secondChat.exchange.requestNodes shouldHaveSize 2
-        secondChat.exchange.requestNodes[1].type shouldBe 1
-        secondChat.exchange.requestNodes[1].toolResultNode!!.toolUseId shouldBe "toolu_001"
-        secondChat.exchange.requestNodes[1].toolResultNode!!.isError shouldBe false
-        secondChat.exchange.requestNodes[1].toolResultNode!!.durationMs shouldBe 50
+        actual shouldBe expected
     }
 })
-
