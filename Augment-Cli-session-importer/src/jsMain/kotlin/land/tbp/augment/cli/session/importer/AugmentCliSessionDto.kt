@@ -5,13 +5,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonNull.content
 
 // ============================================================================
-// Enum serializers for deserializing by integer value
+// Node type enums - @SerialName only works with strings, but our JSON has
+// integer values, so we need custom serializers
 // ============================================================================
 
 @Serializable(with = RequestNodeTypeSerializer::class)
@@ -19,19 +18,16 @@ enum class RequestNodeType(val value: Int) {
     Text(0),
     ToolResult(1),
     IdeState(4),
-    ;
-
-    companion object {
-        private val map = entries.associateBy { it.value }
-        fun fromValue(value: Int): RequestNodeType =
-            map[value] ?: throw IllegalArgumentException("Unknown RequestNodeType: $value")
-    }
 }
 
 object RequestNodeTypeSerializer : KSerializer<RequestNodeType> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("RequestNodeType", PrimitiveKind.INT)
+    override val descriptor = PrimitiveSerialDescriptor("RequestNodeType", PrimitiveKind.INT)
     override fun serialize(encoder: Encoder, value: RequestNodeType) = encoder.encodeInt(value.value)
-    override fun deserialize(decoder: Decoder): RequestNodeType = RequestNodeType.fromValue(decoder.decodeInt())
+    override fun deserialize(decoder: Decoder): RequestNodeType {
+        val intValue = decoder.decodeInt()
+        return RequestNodeType.entries.find { it.value == intValue }
+            ?: throw IllegalArgumentException("Unknown RequestNodeType: $intValue")
+    }
 }
 
 @Serializable(with = ResponseNodeTypeSerializer::class)
@@ -40,19 +36,16 @@ enum class ResponseNodeType(val value: Int) {
     ToolUse(5),
     Thinking(8),
     TokenUsage(10),
-    ;
-
-    companion object {
-        private val map = entries.associateBy { it.value }
-        fun fromValue(value: Int): ResponseNodeType =
-            map[value] ?: throw IllegalArgumentException("Unknown ResponseNodeType: $value")
-    }
 }
 
 object ResponseNodeTypeSerializer : KSerializer<ResponseNodeType> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ResponseNodeType", PrimitiveKind.INT)
+    override val descriptor = PrimitiveSerialDescriptor("ResponseNodeType", PrimitiveKind.INT)
     override fun serialize(encoder: Encoder, value: ResponseNodeType) = encoder.encodeInt(value.value)
-    override fun deserialize(decoder: Decoder): ResponseNodeType = ResponseNodeType.fromValue(decoder.decodeInt())
+    override fun deserialize(decoder: Decoder): ResponseNodeType {
+        val intValue = decoder.decodeInt()
+        return ResponseNodeType.entries.find { it.value == intValue }
+            ?: throw IllegalArgumentException("Unknown ResponseNodeType: $intValue")
+    }
 }
 
 // ============================================================================
@@ -329,10 +322,7 @@ data class Thinking(
     // @SerialName("openai_responses_api_item_id") val openaiResponsesApiItemId: String? = null,
 ) {
     override fun toString(): String {
-        return "Thinking(" +
-            "summary='$summary', " +
-            "content=$content, " +
-            ")"
+        return "Thinking(summary='$summary')"
     }
 }
 
