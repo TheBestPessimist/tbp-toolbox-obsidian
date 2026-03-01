@@ -1,4 +1,4 @@
-rootProject.name = "tbp-toolbox"
+rootProject.name = "tbp-toolbox-obsidian"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
