@@ -1,67 +1,73 @@
 package land.tbp.augment.cli.session.importer
 
-import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import node.buffer.BufferEncoding
+import node.buffer.utf8
 import node.fs.ReaddirSyncWithFileTypesOptions
+import node.fs.readFileSync
 import node.fs.readdirSync
+
+val json = Json {
+    prettyPrint = true
+    ignoreUnknownKeys = true
+}
 
 fun main() {
     val importer = AugmentImporter()
-
-    println("=== Using kotlinx.io ===")
-    importer.listEverythingWithKotlinxIo()
-
-    println("\n=== Using Node.js fs ===")
-    importer.listEverythingWithNodeFs()
+    importer.countKeys()
 }
 
 class AugmentImporter {
-    val augmentPath = """C:\Users\TheBestPessimist\.augment"""
+    // val augmentPath = """C:\Users\TheBestPessimist\.augment"""
+    val augmentPath = """C:\Users\TheBestPessimist\.augment\sessions"""
+    val keys: MutableMap<String, MutableSet<String>> = mutableMapOf()
 
-    /**
-     * List all files and directories recursively using kotlinx.io SystemFileSystem
-     */
-    fun listEverythingWithKotlinxIo() {
-        val p = Path(augmentPath)
-        println("Root: $p")
-        traverseWithKotlinxIo(p, indent = 0)
-    }
+    fun countKeys(path: String = augmentPath, prefix: String = "") {
+        val entries = readdirSync(path, ReaddirSyncWithFileTypesOptions(withFileTypes = true))
+        entries.forEach { dirent ->
+            if (dirent.isFile()) {
+                val f = readFileSync("""$path/${dirent.name}""", BufferEncoding.utf8)
+                println(dirent.name)
 
-    private fun traverseWithKotlinxIo(path: Path, indent: Int) {
-        val prefix = "    ".repeat(indent)
-        SystemFileSystem.list(path).forEach { childPath ->
-            val metadata = SystemFileSystem.metadataOrNull(childPath)
-            val isDir = metadata?.isDirectory == true
-            val suffix = if (isDir) "\\" else ""
-            println("$prefix${childPath.name}$suffix")
+                val jsonElement = json.parseToJsonElement(f)
+                collectKeys(jsonElement, "", dirent.name.toString())
 
-            // Recurse into directories
-            if (isDir) {
-                traverseWithKotlinxIo(childPath, indent + 1)
+                val session: Session = json.decodeFromString(f)
+                println(session)
+            } else {
+                error("dirs aren't supported")
+            }
+        }
+
+        if (prefix.isEmpty()) {
+            keys.forEach { (key, files) ->
+                println("$key (${files.size})")
             }
         }
     }
 
-    /**
-     * List all files and directories recursively using Node.js fs module
-     */
-    fun listEverythingWithNodeFs() {
-        println("Root: $augmentPath")
-        traverseWithNodeFs(augmentPath, indent = 0)
-    }
+    private fun collectKeys(element: JsonElement, path: String, fileName: String) {
+        when (element) {
+            is JsonObject -> {
+                element.forEach { (key, value) ->
+                    val currentPath = if (path.isEmpty()) key else "$path.$key"
+                    keys.getOrPut(currentPath) { mutableSetOf() }.add(fileName)
+                    collectKeys(value, currentPath, fileName)
+                }
+            }
 
-    private fun traverseWithNodeFs(path: String, indent: Int) {
-        val prefix = "    ".repeat(indent)
-        val entries = readdirSync(path, ReaddirSyncWithFileTypesOptions(withFileTypes = true))
-        entries.forEach { dirent ->
-            val isDir = dirent.isDirectory()
-            val suffix = if (isDir) """\""" else ""
-            println("$prefix${dirent.name}$suffix")
+            is JsonArray -> {
+                element.forEachIndexed { index, value ->
+                    collectKeys(value, path, fileName)
+                }
+            }
 
-            // Recurse into directories
-            if (isDir) {
-                val childPath = "$path/${dirent.name}"
-                traverseWithNodeFs(childPath, indent + 1)
+            is JsonPrimitive -> {
+                // Leaf node - no keys to collect
             }
         }
     }

@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 group = "land.tbp"
@@ -31,6 +32,7 @@ kotlin {
                 implementation(kotlin("stdlib-js"))
                 implementation(libs.kotlinx.io.core)
                 implementation(kotlinWrappers.node)
+                implementation(libs.kotlinx.serialization)
             }
         }
     }
