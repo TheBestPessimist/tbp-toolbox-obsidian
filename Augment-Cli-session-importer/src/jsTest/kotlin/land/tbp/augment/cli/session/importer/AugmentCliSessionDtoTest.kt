@@ -1,7 +1,9 @@
 package land.tbp.augment.cli.session.importer
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.serialization.json.Json
 
 /**
@@ -198,7 +200,7 @@ class AugmentCliSessionDtoTest : FunSpec({
 
         val expected = RequestNode(
             id = 1,
-            type = 0,
+            type = RequestNodeType.Text,
             textNode = TextNode(content = "Hello, this is the user's message"),
             toolResultNode = null,
             ideStateNode = null
@@ -224,7 +226,7 @@ class AugmentCliSessionDtoTest : FunSpec({
 
         val expected = RequestNode(
             id = 1,
-            type = 1,
+            type = RequestNodeType.ToolResult,
             textNode = null,
             toolResultNode = ToolResultNode(
                 toolUseId = "toolu_vrtx_01ABC123",
@@ -265,7 +267,7 @@ class AugmentCliSessionDtoTest : FunSpec({
 
         val expected = RequestNode(
             id = 1,
-            type = 1,
+            type = RequestNodeType.ToolResult,
             textNode = null,
             toolResultNode = ToolResultNode(
                 toolUseId = "toolu_vrtx_01ABC123",
@@ -301,7 +303,7 @@ class AugmentCliSessionDtoTest : FunSpec({
 
         val expected = RequestNode(
             id = 1,
-            type = 1,
+            type = RequestNodeType.ToolResult,
             textNode = null,
             toolResultNode = ToolResultNode(
                 toolUseId = "toolu_vrtx_01XYZ789",
@@ -343,7 +345,7 @@ class AugmentCliSessionDtoTest : FunSpec({
 
         val expected = RequestNode(
             id = 2,
-            type = 4,
+            type = RequestNodeType.IdeState,
             textNode = null,
             toolResultNode = null,
             ideStateNode = IdeStateNode(
@@ -362,6 +364,21 @@ class AugmentCliSessionDtoTest : FunSpec({
         )
 
         actual shouldBe expected
+    }
+
+    test("should fail to deserialize request node with invalid type") {
+        val requestNodeJson = """
+        {
+            "id": 1,
+            "type": 99,
+            "text_node": { "content": "test" }
+        }
+        """.trimIndent()
+
+        val exception = shouldThrow<IllegalArgumentException> {
+            json.decodeFromString<RequestNode>(requestNodeJson)
+        }
+        exception.message shouldContain "Unknown RequestNodeType: 99"
     }
 
     test("should deserialize response node type 0 - text content") {
@@ -386,8 +403,7 @@ class AugmentCliSessionDtoTest : FunSpec({
         val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
 
         val expected = ResponseNode(
-            id = 1,
-            type = 0,
+            type = ResponseNodeType.Text,
             content = "Here is the response from the LLM",
             toolUse = null,
             thinking = null,
@@ -422,8 +438,7 @@ class AugmentCliSessionDtoTest : FunSpec({
         val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
 
         val expected = ResponseNode(
-            id = 1,
-            type = 5,
+            type = ResponseNodeType.ToolUse,
             content = "",
             toolUse = ToolUse(
                 toolUseId = "toolu_vrtx_01ABC123",
@@ -467,8 +482,7 @@ class AugmentCliSessionDtoTest : FunSpec({
         val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
 
         val expected = ResponseNode(
-            id = 1,
-            type = 5,
+            type = ResponseNodeType.ToolUse,
             content = "",
             toolUse = ToolUse(
                 toolUseId = "toolu_vrtx_01ABC123",
@@ -515,15 +529,11 @@ class AugmentCliSessionDtoTest : FunSpec({
         val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
 
         val expected = ResponseNode(
-            id = 0,
-            type = 8,
+            type = ResponseNodeType.Thinking,
             content = "",
             toolUse = null,
             thinking = Thinking(
-                summary = "The user wants me to see a TODO file.",
-                encryptedContent = "EsECCkgICxACGAIqQKwV9Ej8245MvW4...",
-                content = null,
-                openaiResponsesApiItemId = null
+                summary = "The user wants me to see a TODO file."
             ),
             billingMetadata = null,
             metadata = Metadata(openaiId = null, googleTs = null, provider = "anthropic", phase = null),
@@ -534,7 +544,7 @@ class AugmentCliSessionDtoTest : FunSpec({
         actual shouldBe expected
     }
 
-    test("should deserialize thinking with decrypted content") {
+    test("should deserialize thinking - unknown keys are ignored") {
         val thinkingJson = """
         {
             "summary": "Analyzing the code",
@@ -547,10 +557,7 @@ class AugmentCliSessionDtoTest : FunSpec({
         val actual = json.decodeFromString<Thinking>(thinkingJson)
 
         val expected = Thinking(
-            summary = "Analyzing the code",
-            encryptedContent = "encrypted...",
-            content = "This is the decrypted thinking content",
-            openaiResponsesApiItemId = "resp_abc123"
+            summary = "Analyzing the code"
         )
 
         actual shouldBe expected
@@ -586,8 +593,7 @@ class AugmentCliSessionDtoTest : FunSpec({
         val actual = json.decodeFromString<ResponseNode>(responseNodeJson)
 
         val expected = ResponseNode(
-            id = 1,
-            type = 10,
+            type = ResponseNodeType.TokenUsage,
             content = "",
             toolUse = null,
             thinking = null,
@@ -610,6 +616,21 @@ class AugmentCliSessionDtoTest : FunSpec({
         )
 
         actual shouldBe expected
+    }
+
+    test("should fail to deserialize response node with invalid type") {
+        val responseNodeJson = """
+        {
+            "id": 1,
+            "type": 99,
+            "content": "test"
+        }
+        """.trimIndent()
+
+        val exception = shouldThrow<IllegalArgumentException> {
+            json.decodeFromString<ResponseNode>(responseNodeJson)
+        }
+        exception.message shouldContain "Unknown ResponseNodeType: 99"
     }
 
     test("should deserialize token usage with optional fields missing") {
@@ -799,12 +820,12 @@ class AugmentCliSessionDtoTest : FunSpec({
                         requestId = "req-001",
                         requestNodes = listOf(
                             RequestNode(
-                                id = 1, type = 0,
+                                id = 1, type = RequestNodeType.Text,
                                 textNode = TextNode(content = "See TODO"),
                                 toolResultNode = null, ideStateNode = null
                             ),
                             RequestNode(
-                                id = 2, type = 4,
+                                id = 2, type = RequestNodeType.IdeState,
                                 textNode = null, toolResultNode = null,
                                 ideStateNode = IdeStateNode(
                                     workspaceFolders = listOf(
@@ -817,15 +838,15 @@ class AugmentCliSessionDtoTest : FunSpec({
                         ),
                         responseNodes = listOf(
                             ResponseNode(
-                                id = 0, type = 8, content = "",
+                                type = ResponseNodeType.Thinking, content = "",
                                 toolUse = null,
-                                thinking = Thinking(summary = "Looking for TODO file", encryptedContent = "encrypted..."),
+                                thinking = Thinking(summary = "Looking for TODO file"),
                                 billingMetadata = null,
                                 metadata = Metadata(provider = "anthropic"),
                                 tokenUsage = null, timestampMs = null
                             ),
                             ResponseNode(
-                                id = 1, type = 5, content = "",
+                                type = ResponseNodeType.ToolUse, content = "",
                                 toolUse = ToolUse(
                                     toolUseId = "toolu_001", toolName = "view",
                                     inputJson = """{"path": "TODO.txt"}""", isPartial = false
@@ -833,7 +854,7 @@ class AugmentCliSessionDtoTest : FunSpec({
                                 thinking = null, billingMetadata = null, metadata = null, tokenUsage = null, timestampMs = null
                             ),
                             ResponseNode(
-                                id = 2, type = 10, content = "",
+                                type = ResponseNodeType.TokenUsage, content = "",
                                 toolUse = null, thinking = null, billingMetadata = null, metadata = null,
                                 tokenUsage = TokenUsage(
                                     inputTokens = 100, outputTokens = 200,
@@ -844,7 +865,7 @@ class AugmentCliSessionDtoTest : FunSpec({
                                 timestampMs = null
                             ),
                             ResponseNode(
-                                id = 3, type = 0, content = "Here is the TODO file content",
+                                type = ResponseNodeType.Text, content = "Here is the TODO file content",
                                 toolUse = null, thinking = null, billingMetadata = null,
                                 metadata = Metadata(provider = "anthropic"),
                                 tokenUsage = null, timestampMs = null

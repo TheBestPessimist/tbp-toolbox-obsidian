@@ -1,7 +1,63 @@
 package land.tbp.augment.cli.session.importer
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonNull.content
+
+// ============================================================================
+// Enum serializers for deserializing by integer value
+// ============================================================================
+
+@Serializable(with = RequestNodeTypeSerializer::class)
+enum class RequestNodeType(val value: Int) {
+    Text(0),
+    ToolResult(1),
+    IdeState(4),
+    ;
+
+    companion object {
+        private val map = entries.associateBy { it.value }
+        fun fromValue(value: Int): RequestNodeType =
+            map[value] ?: throw IllegalArgumentException("Unknown RequestNodeType: $value")
+    }
+}
+
+object RequestNodeTypeSerializer : KSerializer<RequestNodeType> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("RequestNodeType", PrimitiveKind.INT)
+    override fun serialize(encoder: Encoder, value: RequestNodeType) = encoder.encodeInt(value.value)
+    override fun deserialize(decoder: Decoder): RequestNodeType = RequestNodeType.fromValue(decoder.decodeInt())
+}
+
+@Serializable(with = ResponseNodeTypeSerializer::class)
+enum class ResponseNodeType(val value: Int) {
+    Text(0),
+    ToolUse(5),
+    Thinking(8),
+    TokenUsage(10),
+    ;
+
+    companion object {
+        private val map = entries.associateBy { it.value }
+        fun fromValue(value: Int): ResponseNodeType =
+            map[value] ?: throw IllegalArgumentException("Unknown ResponseNodeType: $value")
+    }
+}
+
+object ResponseNodeTypeSerializer : KSerializer<ResponseNodeType> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ResponseNodeType", PrimitiveKind.INT)
+    override fun serialize(encoder: Encoder, value: ResponseNodeType) = encoder.encodeInt(value.value)
+    override fun deserialize(decoder: Decoder): ResponseNodeType = ResponseNodeType.fromValue(decoder.decodeInt())
+}
+
+// ============================================================================
+// Session DTOs
+// ============================================================================
 
 @Serializable
 data class Session(
@@ -95,14 +151,10 @@ data class Exchange(
     }
 }
 
-// ============================================================================
-// Request Nodes - Types: 0 (Text), 1 (ToolResult), 4 (IdeState)
-// ============================================================================
-
 @Serializable
 data class RequestNode(
     val id: Int,
-    val type: Int,
+    val type: RequestNodeType,
     @SerialName("text_node") val textNode: TextNode? = null,
     @SerialName("tool_result_node") val toolResultNode: ToolResultNode? = null,
     @SerialName("ide_state_node") val ideStateNode: IdeStateNode? = null,
@@ -206,14 +258,14 @@ data class CurrentTerminal(
     }
 }
 
-// ============================================================================
-// Response Nodes - Types: 0 (Text), 5 (ToolUse), 8 (Thinking), 10 (TokenUsage)
-// ============================================================================
-
 @Serializable
 data class ResponseNode(
-    val id: Int,
-    val type: Int,
+    /**
+     * - include: ❌
+     * - not interesting
+     */
+    // val id: Int,
+    val type: ResponseNodeType,
     val content: String,
     @SerialName("tool_use") val toolUse: ToolUse? = null,
     val thinking: Thinking? = null,
