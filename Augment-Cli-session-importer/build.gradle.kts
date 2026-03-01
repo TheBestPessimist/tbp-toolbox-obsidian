@@ -1,8 +1,8 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinx.serialization)
-    alias(libs.plugins.kotest)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotest)
 }
 
 group = "land.tbp"

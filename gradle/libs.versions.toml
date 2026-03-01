@@ -3,7 +3,7 @@ junit = "4.13.2"
 kotlin = "2.3.0"
 coroutines = "1.10.2"
 kotest = "6.1.4"
-ksp = "2.3.4"
+ksp = "2.3.6"
 kotlinx-io = "0.9.0"
 kotlinx-serialization = "1.10.0"
 
