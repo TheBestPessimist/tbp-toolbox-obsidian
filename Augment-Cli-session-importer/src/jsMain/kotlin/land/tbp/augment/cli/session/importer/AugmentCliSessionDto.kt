@@ -13,7 +13,20 @@ data class Session(
     val rootTaskUuid: String,
     val customTitle: String? = null,
     val terminalId: String? = null,
-)
+) {
+    override fun toString(): String {
+        return "Session(" +
+            "sessionId='$sessionId', " +
+            "created='$created', " +
+            "modified='$modified', " +
+            "chatHistory=$chatHistory, " +
+            "agentState=$agentState, " +
+            "rootTaskUuid='$rootTaskUuid', " +
+            "customTitle=$customTitle, " +
+            "terminalId=$terminalId" +
+            ")"
+    }
+}
 
 @Serializable
 data class AgentState(
@@ -22,7 +35,17 @@ data class AgentState(
     val agentMemories: String,
     val modelId: String,
     val userEmail: String,
-)
+) {
+    override fun toString(): String {
+        return "AgentState(" +
+            "userGuidelines='$userGuidelines', " +
+            "workspaceGuidelines='$workspaceGuidelines', " +
+            "agentMemories='$agentMemories', " +
+            "modelId='$modelId', " +
+            "userEmail='$userEmail'" +
+            ")"
+    }
+}
 
 @Serializable
 data class ChatHistory(
@@ -36,7 +59,22 @@ data class ChatHistory(
     val isHistorySummary: Boolean? = null,
     val historySummaryVersion: Int? = null,
     val source: String? = null,
-)
+) {
+    override fun toString(): String {
+        return "ChatHistory(" +
+            "exchange=$exchange, " +
+            "completed=$completed, " +
+            "sequenceId=$sequenceId, " +
+            "finishedAt='$finishedAt', " +
+            "changedFiles=$changedFiles, " +
+            "changedFilesSkipped=$changedFilesSkipped, " +
+            "changedFilesSkippedCount=$changedFilesSkippedCount, " +
+            "isHistorySummary=$isHistorySummary, " +
+            "historySummaryVersion=$historySummaryVersion, " +
+            "source=$source" +
+            ")"
+    }
+}
 
 @Serializable
 data class Exchange(
@@ -45,7 +83,17 @@ data class Exchange(
     @SerialName("request_id") val requestId: String,
     @SerialName("request_nodes") val requestNodes: List<RequestNode>,
     @SerialName("response_nodes") val responseNodes: List<ResponseNode>,
-)
+) {
+    override fun toString(): String {
+        return "Exchange(" +
+            "requestMessage='$requestMessage', " +
+            "responseText='$responseText', " +
+            "requestId='$requestId', " +
+            "requestNodes=$requestNodes, " +
+            "responseNodes=$responseNodes" +
+            ")"
+    }
+}
 
 // ============================================================================
 // Request Nodes - Types: 0 (Text), 1 (ToolResult), 4 (IdeState)
@@ -58,12 +106,28 @@ data class RequestNode(
     @SerialName("text_node") val textNode: TextNode? = null,
     @SerialName("tool_result_node") val toolResultNode: ToolResultNode? = null,
     @SerialName("ide_state_node") val ideStateNode: IdeStateNode? = null,
-)
+) {
+    override fun toString(): String {
+        return "RequestNode(" +
+            "id=$id, " +
+            "type=$type, " +
+            "textNode=$textNode, " +
+            "toolResultNode=$toolResultNode, " +
+            "ideStateNode=$ideStateNode" +
+            ")"
+    }
+}
 
 @Serializable
 data class TextNode(
     val content: String,
-)
+) {
+    override fun toString(): String {
+        return "TextNode(" +
+            "content='$content'" +
+            ")"
+    }
+}
 
 @Serializable
 data class ToolResultNode(
@@ -74,32 +138,73 @@ data class ToolResultNode(
     @SerialName("start_time_ms") val startTimeMs: Long? = null,
     @SerialName("request_id") val requestId: String? = null,
     val metadata: ToolResultMetadata? = null,
-)
+) {
+    override fun toString(): String {
+        return "ToolResultNode(" +
+            "toolUseId='$toolUseId', " +
+            "content='$content', " +
+            "isError=$isError, " +
+            "durationMs=$durationMs, " +
+            "startTimeMs=$startTimeMs, " +
+            "requestId=$requestId, " +
+            "metadata=$metadata" +
+            ")"
+    }
+}
 
 @Serializable
 data class ToolResultMetadata(
     @SerialName("tool_lines_added") val toolLinesAdded: Int? = null,
     @SerialName("tool_lines_deleted") val toolLinesDeleted: Int? = null,
-)
+) {
+    override fun toString(): String {
+        return "ToolResultMetadata(" +
+            "toolLinesAdded=$toolLinesAdded, " +
+            "toolLinesDeleted=$toolLinesDeleted" +
+            ")"
+    }
+}
 
 @Serializable
 data class IdeStateNode(
     @SerialName("workspace_folders") val workspaceFolders: List<WorkspaceFolder>,
     @SerialName("workspace_folders_unchanged") val workspaceFoldersUnchanged: Boolean,
     @SerialName("current_terminal") val currentTerminal: CurrentTerminal,
-)
+) {
+    override fun toString(): String {
+        return "IdeStateNode(" +
+            "workspaceFolders=$workspaceFolders, " +
+            "workspaceFoldersUnchanged=$workspaceFoldersUnchanged, " +
+            "currentTerminal=$currentTerminal" +
+            ")"
+    }
+}
 
 @Serializable
 data class WorkspaceFolder(
     @SerialName("repository_root") val repositoryRoot: String,
     @SerialName("folder_root") val folderRoot: String,
-)
+) {
+    override fun toString(): String {
+        return "WorkspaceFolder(" +
+            "repositoryRoot='$repositoryRoot', " +
+            "folderRoot='$folderRoot'" +
+            ")"
+    }
+}
 
 @Serializable
 data class CurrentTerminal(
     @SerialName("terminal_id") val terminalId: Int,
     @SerialName("current_working_directory") val currentWorkingDirectory: String,
-)
+) {
+    override fun toString(): String {
+        return "CurrentTerminal(" +
+            "terminalId=$terminalId, " +
+            "currentWorkingDirectory='$currentWorkingDirectory'" +
+            ")"
+    }
+}
 
 // ============================================================================
 // Response Nodes - Types: 0 (Text), 5 (ToolUse), 8 (Thinking), 10 (TokenUsage)
@@ -116,7 +221,20 @@ data class ResponseNode(
     val metadata: Metadata? = null,
     @SerialName("token_usage") val tokenUsage: TokenUsage? = null,
     @SerialName("timestamp_ms") val timestampMs: Long? = null,
-)
+) {
+    override fun toString(): String {
+        return "ResponseNode(" +
+            "type=$type, " +
+            "content='$content', " +
+            "toolUse=$toolUse, " +
+            "thinking=$thinking, " +
+            "billingMetadata=$billingMetadata, " +
+            "metadata=$metadata, " +
+            "tokenUsage=$tokenUsage, " +
+            "timestampMs=$timestampMs" +
+            ")"
+    }
+}
 
 @Serializable
 data class ToolUse(
@@ -126,15 +244,45 @@ data class ToolUse(
     @SerialName("is_partial") val isPartial: Boolean,
     @SerialName("started_at_ms") val startedAtMs: Long? = null,
     @SerialName("completed_at_ms") val completedAtMs: Long? = null,
-)
+) {
+    override fun toString(): String {
+        return "ToolUse(" +
+            "toolUseId='$toolUseId', " +
+            "toolName='$toolName', " +
+            "inputJson='$inputJson', " +
+            "isPartial=$isPartial, " +
+            "startedAtMs=$startedAtMs, " +
+            "completedAtMs=$completedAtMs" +
+            ")"
+    }
+}
 
 @Serializable
 data class Thinking(
     val summary: String,
-    @SerialName("encrypted_content") val encryptedContent: String,
-    val content: String? = null,
-    @SerialName("openai_responses_api_item_id") val openaiResponsesApiItemId: String? = null,
-)
+    // /**
+    //  * -include: ❌
+    //  * - seems useless
+    //  */
+    // @SerialName("encrypted_content") val encryptedContent: String,
+    // /**
+    //  * - include ❌
+    //  * - This one seems to be always empty
+    //  */
+    // val content: String? = null,
+    // /**
+    //  * - include ❌
+    //  * - This one seems to be always empty
+    //  */
+    // @SerialName("openai_responses_api_item_id") val openaiResponsesApiItemId: String? = null,
+) {
+    override fun toString(): String {
+        return "Thinking(" +
+            "summary='$summary', " +
+            "content=$content, " +
+            ")"
+    }
+}
 
 @Serializable
 data class TokenUsage(
@@ -149,7 +297,23 @@ data class TokenUsage(
     @SerialName("tool_definitions_tokens") val toolDefinitionsTokens: Long? = null,
     @SerialName("tool_result_tokens") val toolResultTokens: Long? = null,
     @SerialName("assistant_response_tokens") val assistantResponseTokens: Long? = null,
-)
+) {
+    override fun toString(): String {
+        return "TokenUsage(" +
+            "inputTokens=$inputTokens, " +
+            "outputTokens=$outputTokens, " +
+            "cacheReadInputTokens=$cacheReadInputTokens, " +
+            "cacheCreationInputTokens=$cacheCreationInputTokens, " +
+            "systemPromptTokens=$systemPromptTokens, " +
+            "chatHistoryTokens=$chatHistoryTokens, " +
+            "currentMessageTokens=$currentMessageTokens, " +
+            "maxContextTokens=$maxContextTokens, " +
+            "toolDefinitionsTokens=$toolDefinitionsTokens, " +
+            "toolResultTokens=$toolResultTokens, " +
+            "assistantResponseTokens=$assistantResponseTokens" +
+            ")"
+    }
+}
 
 @Serializable
 data class Metadata(
@@ -157,4 +321,13 @@ data class Metadata(
     @SerialName("google_ts") val googleTs: String? = null,
     val provider: String? = null,
     val phase: String? = null,
-)
+) {
+    override fun toString(): String {
+        return "Metadata(" +
+            "openaiId=$openaiId, " +
+            "googleTs=$googleTs, " +
+            "provider=$provider, " +
+            "phase=$phase" +
+            ")"
+    }
+}
