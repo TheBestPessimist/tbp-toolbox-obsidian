@@ -1,14 +1,12 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.kotest)
+    alias(libs.plugins.ksp)
 }
 
 group = "land.tbp"
 version = "unspecified"
-
-// dependencies {
-//     testImplementation(kotlin("test"))
-// }
 
 kotlin {
     js {
@@ -33,6 +31,13 @@ kotlin {
                 implementation(libs.kotlinx.io.core)
                 implementation(kotlinWrappers.node)
                 implementation(libs.kotlinx.serialization)
+            }
+        }
+
+        jsTest {
+            dependencies {
+                implementation(libs.kotest.framework.engine)
+                implementation(libs.kotest.assertions.core)
             }
         }
     }
