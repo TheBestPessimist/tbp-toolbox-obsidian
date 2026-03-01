@@ -1,6 +1,5 @@
 [versions]
-junit = "4.13.2"
-kotlin = "2.3.0"
+kotlin = "2.3.10"
 coroutines = "1.10.2"
 kotest = "6.1.4"
 ksp = "2.3.6"
@@ -8,9 +7,6 @@ kotlinx-io = "0.9.0"
 kotlinx-serialization = "1.10.0"
 
 [libraries]
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
-junit = { module = "junit:junit", version.ref = "junit" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
