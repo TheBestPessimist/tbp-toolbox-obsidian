@@ -8,11 +8,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-// ============================================================================
-// Node type enums - @SerialName only works with strings, but our JSON has
-// integer values, so we need custom serializers
-// ============================================================================
-
 @Serializable(with = RequestNodeTypeSerializer::class)
 enum class RequestNodeType(val value: Int) {
     Text(0),
@@ -48,20 +43,38 @@ object ResponseNodeTypeSerializer : KSerializer<ResponseNodeType> {
     }
 }
 
-// ============================================================================
-// Session DTOs
-// ============================================================================
-
 @Serializable
 data class Session(
+    /**
+     * - include ✅
+     */
     val sessionId: String,
+    /**
+     * - include ✅
+     */
     val created: String,
+    /**
+     * - include ✅
+     */
     val modified: String,
     val chatHistory: List<ChatHistory>,
-    val agentState: AgentState,
-    val rootTaskUuid: String,
+    // /**
+    //  * - Include: ❌
+    //  * - Doesnt have that interesting data as of 2026-03-02
+    //  */
+    // val agentState: AgentState,
+    // /**
+    //  * - Include: ❌
+    //  */
+    // val rootTaskUuid: String,
+    /**
+     * - include ✅
+     */
     val customTitle: String? = null,
-    val terminalId: String? = null,
+    // /**
+    //  * - Include: ❌
+    //  */
+    //  val terminalId: String? = null,
 ) {
     override fun toString(): String {
         return "Session(" +
@@ -69,29 +82,7 @@ data class Session(
             "created='$created', " +
             "modified='$modified', " +
             "chatHistory=$chatHistory, " +
-            "agentState=$agentState, " +
-            "rootTaskUuid='$rootTaskUuid', " +
             "customTitle=$customTitle, " +
-            "terminalId=$terminalId" +
-            ")"
-    }
-}
-
-@Serializable
-data class AgentState(
-    val userGuidelines: String,
-    val workspaceGuidelines: String,
-    val agentMemories: String,
-    val modelId: String,
-    val userEmail: String,
-) {
-    override fun toString(): String {
-        return "AgentState(" +
-            "userGuidelines='$userGuidelines', " +
-            "workspaceGuidelines='$workspaceGuidelines', " +
-            "agentMemories='$agentMemories', " +
-            "modelId='$modelId', " +
-            "userEmail='$userEmail'" +
             ")"
     }
 }
@@ -253,19 +244,34 @@ data class CurrentTerminal(
 
 @Serializable
 data class ResponseNode(
-    /**
-     * - include: ❌
-     * - not interesting
-     */
+    // /**
+    //  * - include: ❌
+    //  * - not interesting
+    //  */
     // val id: Int,
     val type: ResponseNodeType,
     val content: String,
     @SerialName("tool_use") val toolUse: ToolUse? = null,
     val thinking: Thinking? = null,
-    @SerialName("billing_metadata") val billingMetadata: String? = null,
-    val metadata: Metadata? = null,
+    // /**
+    //  * - include :❌
+    //  * - this is always null
+    //  */
+    // @SerialName("billing_metadata") val billingMetadata: String? = null,
+    // /**
+    //  * - include :❌
+    //  * - nothing interesting
+    //  */
+    // val metadata: Metadata? = null,
+    /**
+     * Might be interesting
+     */
     @SerialName("token_usage") val tokenUsage: TokenUsage? = null,
-    @SerialName("timestamp_ms") val timestampMs: Long? = null,
+    // /**
+    //  * - include :❌
+    //  * - nothing interesting
+    //  */
+    // @SerialName("timestamp_ms") val timestampMs: Long? = null,
 ) {
     override fun toString(): String {
         return "ResponseNode(" +
@@ -273,10 +279,7 @@ data class ResponseNode(
             "content='$content', " +
             "toolUse=$toolUse, " +
             "thinking=$thinking, " +
-            "billingMetadata=$billingMetadata, " +
-            "metadata=$metadata, " +
             "tokenUsage=$tokenUsage, " +
-            "timestampMs=$timestampMs" +
             ")"
     }
 }
