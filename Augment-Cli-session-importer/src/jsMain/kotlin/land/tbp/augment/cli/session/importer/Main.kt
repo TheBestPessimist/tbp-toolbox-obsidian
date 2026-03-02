@@ -7,9 +7,12 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import node.buffer.BufferEncoding
 import node.buffer.utf8
+import js.objects.unsafeJso
 import node.fs.ReaddirSyncWithFileTypesOptions
+import node.fs.StatSyncFnSimpleThrowIfNoEntryOptions
 import node.fs.readFileSync
 import node.fs.readdirSync
+import node.fs.statSync
 import kotlin.collections.component1
 import kotlin.collections.component2
 
@@ -50,23 +53,20 @@ fun main() {
     importer.content.forEach {
         it.chatHistory.forEach {
 
-        println()
-        println("========")
+            println()
+            println("========")
 
             it.completed
 
-
-
-
-        //     it.exchange.responseNodes.forEach {
-        //
-        //         // it.content
-        //         //
-        //         println()
-        //         println("========")
-        //         // println("""${it.type}${it.content}""")
-        //
-        //     }
+            //     it.exchange.responseNodes.forEach {
+            //
+            //         // it.content
+            //         //
+            //         println()
+            //         println("========")
+            //         // println("""${it.type}${it.content}""")
+            //
+            //     }
         }
     }
 }
@@ -77,22 +77,26 @@ class AugmentImporter {
     val content = mutableListOf<Session>()
 
     fun process(path: String = augmentPath, prefix: String = "") {
-        val entries = readdirSync(path, ReaddirSyncWithFileTypesOptions(withFileTypes = true))
-        entries.forEach { dirent ->
-            if (dirent.isFile()) {
-                val f = readFileSync("""$path/${dirent.name}""", BufferEncoding.utf8)
+        // Sort files by creation time (birthtime) descending - newest first
+        readdirSync(path, ReaddirSyncWithFileTypesOptions(withFileTypes = true))
+            .sortedByDescending { dirent ->
+                val fullPath = "$path/${dirent.name}"
+                statSync(fullPath, unsafeJso<StatSyncFnSimpleThrowIfNoEntryOptions>()).birthtimeMs
+            }.forEach { dirent ->
+                if (dirent.isFile()) {
+                    val f = readFileSync("""$path/${dirent.name}""", BufferEncoding.utf8)
 
-                val jsonElement = json.parseToJsonElement(f)
-                collectKeys(jsonElement, "", dirent.name.toString())
+                    val jsonElement = json.parseToJsonElement(f)
+                    collectKeys(jsonElement, "", dirent.name.toString())
 
-                val session: Session = json.decodeFromString(f)
-                content.add(session)
-                // Note: No need for explicit validation - deserialization will fail
-                // automatically if an invalid enum value is encountered
-            } else {
-                error("dirs aren't supported")
+                    val session: Session = json.decodeFromString(f)
+                    content.add(session)
+                    // Note: No need for explicit validation - deserialization will fail
+                    // automatically if an invalid enum value is encountered
+                } else {
+                    error("dirs aren't supported")
+                }
             }
-        }
     }
 
     private fun collectKeys(element: JsonElement, path: String, fileName: String) {
