@@ -22,9 +22,8 @@ val json = Json {
 }
 
 fun main() {
-    // Test with a specific session file
-    // val testSessionPath = """C:\Users\TheBestPessimist\.augment\sessions\bcdb2e51-ed3f-4f85-9f92-2e7ccf007d2c.json"""
-    val testSessionPath = """C:\Users\TheBestPessimist\.augment\sessions\1e103837-ea1a-4224-bf80-9209d68e8142.json"""
+    // Test with a specific session file (using a completed session for stable tests)
+    val testSessionPath = """C:\Users\TheBestPessimist\.augment\sessions\bcdb2e51-ed3f-4f85-9f92-2e7ccf007d2c.json"""
 
     val fileContent = readFileSync(testSessionPath, BufferEncoding.utf8)
     val session: Session = json.decodeFromString(fileContent)
