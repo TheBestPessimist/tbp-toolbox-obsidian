@@ -46,29 +46,33 @@ fun main() {
     val importer = AugmentImporter()
     importer.process()
 
-    // importer.keys.forEach { (key, files) ->
-    //     println("$key (${files.size})")
+    // this is debugging. ignore it.
+    // // importer.keys.forEach { (key, files) ->
+    // //     println("$key (${files.size})")
+    // // }
+    //
+    // importer.content.forEach {
+    //     it.chatHistory.forEach {
+    //
+    //         // println()
+    //         // println("========")
+    //
+    //         println(it.completed)
+    //         if (!it.completed) {
+    //             println(it)
+    //         }
+    //
+    //         //     it.exchange.responseNodes.forEach {
+    //         //
+    //         //         // it.content
+    //         //         //
+    //         //         println()
+    //         //         println("========")
+    //         //         // println("""${it.type}${it.content}""")
+    //         //
+    //         //     }
+    //     }
     // }
-
-    importer.content.forEach {
-        it.chatHistory.forEach {
-
-            println()
-            println("========")
-
-            it.completed
-
-            //     it.exchange.responseNodes.forEach {
-            //
-            //         // it.content
-            //         //
-            //         println()
-            //         println("========")
-            //         // println("""${it.type}${it.content}""")
-            //
-            //     }
-        }
-    }
 }
 
 class AugmentImporter {
