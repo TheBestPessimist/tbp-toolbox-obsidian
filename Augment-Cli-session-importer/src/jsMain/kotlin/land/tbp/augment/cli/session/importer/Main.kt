@@ -22,57 +22,15 @@ val json = Json {
 }
 
 fun main() {
+    // Test with a specific session file
+    val testSessionPath = """C:\Users\TheBestPessimist\.augment\sessions\bcdb2e51-ed3f-4f85-9f92-2e7ccf007d2c.json"""
 
-    /*
-    classes to check
-        ✅ Session
-        ✅ AgentState
-        ChatHistory
-        Exchange
-        RequestNode
-        TextNode
-        ToolResultNode
-        ToolResultMetadata
-        IdeStateNode
-        WorkspaceFolder
-        CurrentTerminal
-        ✅ ResponseNode
-        ToolUse
-        ✅ Thinking
-        TokenUsage
-        Metadata
-     */
+    val fileContent = readFileSync(testSessionPath, BufferEncoding.utf8)
+    val session: Session = json.decodeFromString(fileContent)
 
-    val importer = AugmentImporter()
-    importer.process()
-
-    // this is debugging. ignore it.
-    // // importer.keys.forEach { (key, files) ->
-    // //     println("$key (${files.size})")
-    // // }
-    //
-    // importer.content.forEach {
-    //     it.chatHistory.forEach {
-    //
-    //         // println()
-    //         // println("========")
-    //
-    //         println(it.completed)
-    //         if (!it.completed) {
-    //             println(it)
-    //         }
-    //
-    //         //     it.exchange.responseNodes.forEach {
-    //         //
-    //         //         // it.content
-    //         //         //
-    //         //         println()
-    //         //         println("========")
-    //         //         // println("""${it.type}${it.content}""")
-    //         //
-    //         //     }
-    //     }
-    // }
+    // Export to Markdown
+    val markdown = session.toMarkdown()
+    println(markdown)
 }
 
 class AugmentImporter {

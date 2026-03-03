@@ -8,10 +8,53 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+/**
+ * # Augment CLI Session Data Structure
+ *
+ * ## Understanding the Conversation Flow
+ *
+ * Each `ChatHistory` entry represents one exchange (request-response cycle).
+ *
+ * ### Duplication Pattern Explanation:
+ *
+ * The LLM tool-use loop works like this:
+ * 1. User sends message → AI responds with tool calls (`response_nodes` with `type=5`)
+ * 2. Tools execute → Results are fed back to AI in the NEXT exchange's `request_nodes` (as `type=1`)
+ *
+ * This means **tool results appear twice**:
+ * - First: implicitly after `ToolUse` in `response_nodes` (the tool was called)
+ * - Second: explicitly in the next exchange's `request_nodes` as `ToolResultNode` (fed back to AI)
+ *
+ * ### What to use for a clean transcript:
+ *
+ * **From `request_nodes`:**
+ * - `TextNode` (type=0): ✅ User's message - IMPORTANT
+ * - `ToolResultNode` (type=1): ⚠️ DUPLICATED - skip for transcript, or pair with previous exchange's ToolUse
+ * - `IdeStateNode` (type=4): ❌ Just workspace context - not interesting for reading
+ *
+ * **From `response_nodes`:**
+ * - `Text` (type=0): ✅ AI's text output
+ * - `ToolUse` (type=5): ✅ Shows what tools AI called - valuable for understanding AI reasoning
+ * - `Thinking` (type=8): ✅ AI's reasoning summary - very valuable
+ * - `TokenUsage` (type=10): ⚠️ Useful for stats, not for reading
+ *
+ * ### Recommended approach for transcripts:
+ *
+ * For each exchange, show:
+ * 1. User message (`requestMessage` or `TextNode`)
+ * 2. AI thinking summary (from `Thinking`)
+ * 3. Tool calls made (from `ToolUse` - just tool names + input)
+ * 4. AI response text (`responseText`)
+ * 5. Optionally: tool results paired with their ToolUse (from next exchange's `ToolResultNode`)
+ */
+
 @Serializable(with = RequestNodeTypeSerializer::class)
 enum class RequestNodeType(val value: Int) {
+    /** User's text message */
     Text(0),
+    /** Tool result from previous exchange - DUPLICATED content, fed back to AI */
     ToolResult(1),
+    /** IDE/workspace state - not interesting for transcripts */
     IdeState(4),
 }
 
@@ -27,9 +70,13 @@ object RequestNodeTypeSerializer : KSerializer<RequestNodeType> {
 
 @Serializable(with = ResponseNodeTypeSerializer::class)
 enum class ResponseNodeType(val value: Int) {
+    /** AI's text output - ✅ include in transcript */
     Text(0),
+    /** Tool call made by AI - ✅ include (shows AI reasoning) */
     ToolUse(5),
+    /** AI's thinking/reasoning summary - ✅ very valuable */
     Thinking(8),
+    /** Token usage statistics - ⚠️ useful for stats only */
     TokenUsage(10),
 }
 
@@ -118,10 +165,24 @@ data class ChatHistory(
 
 @Serializable
 data class Exchange(
+    /**
+     * ✅ The user's message text - primary source for user input
+     */
     @SerialName("request_message") val requestMessage: String,
+    /**
+     * ✅ The AI's final response text - primary source for AI output
+     */
     @SerialName("response_text") val responseText: String,
     @SerialName("request_id") val requestId: String,
+    /**
+     * Contains: TextNode (user message), ToolResultNode (DUPLICATED from prev exchange), IdeStateNode (workspace info)
+     * For transcripts, you typically only need `requestMessage` instead of parsing these.
+     */
     @SerialName("request_nodes") val requestNodes: List<RequestNode>,
+    /**
+     * Contains: Text (AI output), ToolUse (tool calls), Thinking (reasoning), TokenUsage (stats)
+     * All valuable for understanding the AI's response.
+     */
     @SerialName("response_nodes") val responseNodes: List<ResponseNode>,
 ) {
     override fun toString(): String {
@@ -135,12 +196,34 @@ data class Exchange(
     }
 }
 
+/**
+ * Represents a node in the request (user's turn).
+ *
+ * ## Important: Duplication of ToolResultNode
+ *
+ * `toolResultNode` contains results from tools called in the PREVIOUS exchange.
+ * This is how the LLM tool-use loop works:
+ * 1. Exchange N: AI calls tool X (via ToolUse in response_nodes)
+ * 2. Exchange N+1: Tool X's result appears here as ToolResultNode
+ *
+ * For clean transcripts, you can either:
+ * - Skip `toolResultNode` entirely (the tool call in prev exchange implies the result)
+ * - Or pair each `ToolResultNode` with its matching `ToolUse` from the previous exchange
+ *   (match via `toolUseId`)
+ */
 @Serializable
 data class RequestNode(
     val id: Int,
     val type: RequestNodeType,
+    /** ✅ User's text message - include in transcript */
     @SerialName("text_node") val textNode: TextNode? = null,
+    /**
+     * ⚠️ DUPLICATED: Tool result from PREVIOUS exchange's tool call.
+     * The content here was produced by the ToolUse in the previous response_nodes.
+     * Skip for transcript to avoid duplication, or pair with matching ToolUse.toolUseId
+     */
     @SerialName("tool_result_node") val toolResultNode: ToolResultNode? = null,
+    /** ❌ Workspace/IDE state - not interesting for reading transcripts */
     @SerialName("ide_state_node") val ideStateNode: IdeStateNode? = null,
 ) {
     override fun toString(): String {
@@ -165,11 +248,29 @@ data class TextNode(
     }
 }
 
+/**
+ * Result of a tool execution.
+ *
+ * ⚠️ DUPLICATION NOTE: This appears in `request_nodes` of exchange N+1,
+ * representing the result of a `ToolUse` from exchange N's `response_nodes`.
+ *
+ * To pair with the original tool call, match `toolUseId` with `ToolUse.toolUseId`
+ * from the previous exchange.
+ *
+ * For transcripts: Consider skipping this content since:
+ * - It's often very large (file contents, search results)
+ * - The `ToolUse` in the previous exchange already shows what was requested
+ * - Or show a truncated/summarized version
+ */
 @Serializable
 data class ToolResultNode(
+    /** Matches ToolUse.toolUseId from the previous exchange */
     @SerialName("tool_use_id") val toolUseId: String,
+    /** The actual result content - can be very large (file contents, etc.) */
     val content: String,
+    /** Whether the tool execution resulted in an error */
     @SerialName("is_error") val isError: Boolean,
+    /** How long the tool took to execute */
     @SerialName("duration_ms") val durationMs: Long? = null,
     @SerialName("start_time_ms") val startTimeMs: Long? = null,
     @SerialName("request_id") val requestId: String? = null,
@@ -178,12 +279,9 @@ data class ToolResultNode(
     override fun toString(): String {
         return "ToolResultNode(" +
             "toolUseId='$toolUseId', " +
-            "content='$content', " +
+            "content='${content.take(100)}${if (content.length > 100) "..." else ""}', " +
             "isError=$isError, " +
-            "durationMs=$durationMs, " +
-            "startTimeMs=$startTimeMs, " +
-            "requestId=$requestId, " +
-            "metadata=$metadata" +
+            "durationMs=$durationMs" +
             ")"
     }
 }
