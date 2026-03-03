@@ -48,18 +48,18 @@ data class ToolCallWithResult(
 )
 
 /**
- * A clean representation of an exchange for transcript purposes.
- * Strips duplicated data and provides easy access to important fields.
+ * A human-centric turn in the conversation.
+ *
+ * From the user's perspective, a "turn" starts when they type a message
+ * and includes ALL the back-and-forth between Auggie and the LLM until
+ * the user types again.
  */
-data class CleanExchange(
-    val index: Int,
+data class UserTurn(
     val userMessage: String,
     val thinkingSummary: String?,
     val toolCalls: List<ToolUse>,
     val aiResponse: String,
-    val finishedAt: String,
     val changedFiles: List<String>,
-    val completed: Boolean,
 )
 
 // =============================================================================
@@ -67,21 +67,77 @@ data class CleanExchange(
 // =============================================================================
 
 /**
- * Convert the session to a list of clean exchanges without duplication.
+ * Convert the session to a list of user turns.
+ *
+ * Groups consecutive exchanges where the user message is empty -
+ * these are tool execution loops that are part of the same user turn.
  */
-fun Session.toCleanExchanges(): List<CleanExchange> {
-    return chatHistory.mapIndexed { index, history ->
-        CleanExchange(
-            index = index,
-            userMessage = history.exchange.requestMessage,
-            thinkingSummary = history.exchange.getThinkingSummary(),
-            toolCalls = history.exchange.getToolCalls(),
-            aiResponse = history.exchange.responseText,
-            finishedAt = history.finishedAt,
-            changedFiles = history.changedFiles,
-            completed = history.completed,
+fun Session.toUserTurns(): List<UserTurn> {
+    val turns = mutableListOf<UserTurn>()
+
+    var currentUserMessage: String? = null
+    var accumulatedThinking: String? = null
+    val accumulatedToolCalls = mutableListOf<ToolUse>()
+    val accumulatedResponses = mutableListOf<String>()
+    val accumulatedChangedFiles = mutableListOf<String>()
+
+    for (history in chatHistory) {
+        val exchange = history.exchange
+        val userMsg = exchange.requestMessage.trim()
+
+        if (userMsg.isNotEmpty()) {
+            // New user message - save the previous turn (if any)
+            if (currentUserMessage != null) {
+                turns.add(
+                    UserTurn(
+                        userMessage = currentUserMessage,
+                        thinkingSummary = accumulatedThinking,
+                        toolCalls = accumulatedToolCalls.toList(),
+                        aiResponse = accumulatedResponses
+                            .filter { it.isNotBlank() }
+                            .joinToString("\n\n"),
+                        changedFiles = accumulatedChangedFiles.distinct(),
+                    )
+                )
+            }
+
+            // Start new turn
+            currentUserMessage = userMsg
+            accumulatedThinking = exchange.getThinkingSummary()
+            accumulatedToolCalls.clear()
+            accumulatedToolCalls.addAll(exchange.getToolCalls())
+            accumulatedResponses.clear()
+            accumulatedResponses.add(exchange.responseText)
+            accumulatedChangedFiles.clear()
+            accumulatedChangedFiles.addAll(history.changedFiles)
+        } else {
+            // Empty user message - continuation of previous turn (tool loop)
+            // Keep first thinking summary if we don't have one yet
+            if (accumulatedThinking == null) {
+                accumulatedThinking = exchange.getThinkingSummary()
+            }
+            accumulatedToolCalls.addAll(exchange.getToolCalls())
+            accumulatedResponses.add(exchange.responseText)
+            accumulatedChangedFiles.addAll(history.changedFiles)
+        }
+    }
+
+    // Don't forget the last turn
+    if (currentUserMessage != null) {
+        turns.add(
+            UserTurn(
+                userMessage = currentUserMessage,
+                thinkingSummary = accumulatedThinking,
+                toolCalls = accumulatedToolCalls.toList(),
+                aiResponse = accumulatedResponses
+                    .filter { it.isNotBlank() }
+                    .joinToString("\n\n"),
+                changedFiles = accumulatedChangedFiles.distinct(),
+            )
         )
     }
+
+    return turns
 }
 
 /**
@@ -117,60 +173,66 @@ fun Session.getToolCallsWithResults(): List<ToolCallWithResult> {
 
 /**
  * Export a session to a clean Markdown transcript.
+ *
+ * Uses the human-centric UserTurn structure - each section represents
+ * one user message and everything that happened in response.
  */
 fun Session.toMarkdown(): String {
     val sb = StringBuilder()
 
     // Header
-    sb.appendLine("# Session: ${customTitle ?: sessionId}")
+    sb.appendLine("# ${customTitle ?: "Session $sessionId"}")
     sb.appendLine()
-    sb.appendLine("- **Created:** $created")
-    sb.appendLine("- **Modified:** $modified")
-    sb.appendLine("- **Session ID:** $sessionId")
+    sb.appendLine("*Created: $created • Modified: $modified*")
     sb.appendLine()
     sb.appendLine("---")
     sb.appendLine()
 
-    // Exchanges
-    toCleanExchanges().forEach { exchange ->
-        sb.appendLine("## Exchange ${exchange.index + 1}")
-        sb.appendLine()
-
+    // User turns
+    toUserTurns().forEach { turn ->
         // User message
-        sb.appendLine("### 👤 User")
+        sb.appendLine("## 👤 User")
         sb.appendLine()
-        sb.appendLine(exchange.userMessage)
+        sb.appendLine(turn.userMessage)
         sb.appendLine()
 
-        // AI thinking (if present)
-        exchange.thinkingSummary?.let { thinking ->
+        // AI thinking (if present and non-empty)
+        turn.thinkingSummary?.takeIf { it.isNotBlank() }?.let { thinking ->
             sb.appendLine("### 🧠 Thinking")
             sb.appendLine()
             sb.appendLine(thinking)
             sb.appendLine()
         }
 
-        // Tool calls (if any)
-        if (exchange.toolCalls.isNotEmpty()) {
-            sb.appendLine("### 🔧 Tool Calls")
+        // Tool calls (if any) - grouped by tool name with count
+        if (turn.toolCalls.isNotEmpty()) {
+            sb.appendLine("### 🔧 Tools Used")
             sb.appendLine()
-            exchange.toolCalls.forEach { tool ->
-                sb.appendLine("- **${tool.toolName}**")
-            }
+            turn.toolCalls
+                .groupBy { it.toolName }
+                .forEach { (toolName, calls) ->
+                    if (calls.size > 1) {
+                        sb.appendLine("- **$toolName** (×${calls.size})")
+                    } else {
+                        sb.appendLine("- **$toolName**")
+                    }
+                }
             sb.appendLine()
         }
 
-        // AI response
-        sb.appendLine("### 🤖 Assistant")
-        sb.appendLine()
-        sb.appendLine(exchange.aiResponse)
-        sb.appendLine()
+        // AI response (only if non-empty)
+        if (turn.aiResponse.isNotBlank()) {
+            sb.appendLine("### 🤖 Assistant")
+            sb.appendLine()
+            sb.appendLine(turn.aiResponse)
+            sb.appendLine()
+        }
 
         // Changed files (if any)
-        if (exchange.changedFiles.isNotEmpty()) {
-            sb.appendLine("#### Changed Files")
+        if (turn.changedFiles.isNotEmpty()) {
+            sb.appendLine("### 📝 Files Changed")
             sb.appendLine()
-            exchange.changedFiles.forEach { file ->
+            turn.changedFiles.forEach { file ->
                 sb.appendLine("- `$file`")
             }
             sb.appendLine()
