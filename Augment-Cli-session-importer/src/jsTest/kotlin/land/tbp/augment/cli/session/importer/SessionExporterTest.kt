@@ -45,7 +45,7 @@ class SessionExporterTest : FunSpec(
             )
 
             // Compare (trim to handle any trailing whitespace differences)
-            actualMarkdown.trim() shouldBe expectedMarkdown.trim()
+            actualMarkdown.trim().lines() shouldBe expectedMarkdown.trim().lines()
         }
     },
 )
