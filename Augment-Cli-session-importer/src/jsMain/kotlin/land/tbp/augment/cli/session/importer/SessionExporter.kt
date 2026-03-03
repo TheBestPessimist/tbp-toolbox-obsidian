@@ -219,9 +219,9 @@ fun Session.toMarkdown(): String {
             step.thinking?.takeIf { it.isNotBlank() && it !in shownThinking }?.let { thinking ->
                 shownThinking.add(thinking)
                 sb.appendLine("> 🧠 **Thinking**")
-                sb.appendLine("> ")
+                sb.appendLine(">")
                 thinking.lines().forEach { line ->
-                    sb.appendLine("> $line")
+                    sb.appendLine("> $line".trimEnd())
                 }
                 sb.appendLine()
             }
@@ -229,10 +229,10 @@ fun Session.toMarkdown(): String {
             // Tool calls with details
             step.toolCalls.forEach { tool ->
                 sb.appendLine("> 🔧 **${tool.toolName}**")
-                sb.appendLine("> ")
+                sb.appendLine(">")
                 sb.appendLine("> ```json")
                 formatToolInput(tool.inputJson).lines().forEach { line ->
-                    sb.appendLine("> $line")
+                    sb.appendLine("> $line".trimEnd())
                 }
                 sb.appendLine("> ```")
                 sb.appendLine()
@@ -241,9 +241,9 @@ fun Session.toMarkdown(): String {
             // Response (if non-empty)
             if (step.response.isNotBlank()) {
                 sb.appendLine("> 🤖 **Assistant**")
-                sb.appendLine("> ")
+                sb.appendLine(">")
                 step.response.lines().forEach { line ->
-                    sb.appendLine("> $line")
+                    sb.appendLine("> $line".trimEnd())
                 }
                 sb.appendLine()
             }

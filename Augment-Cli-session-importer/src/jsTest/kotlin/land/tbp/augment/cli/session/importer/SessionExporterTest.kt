@@ -19,31 +19,33 @@ private const val RESOURCES_PATH = "kotlin/"
  * Tests for SessionExporter markdown generation.
  * Uses fixture files to track formatting changes over time.
  */
-class SessionExporterTest : FunSpec({
+class SessionExporterTest : FunSpec(
+    {
 
-    val json = Json {
-        prettyPrint = true
-        ignoreUnknownKeys = true
-    }
+        val json = Json {
+            prettyPrint = true
+            ignoreUnknownKeys = true
+        }
 
-    test("should export session 1e103837 to expected markdown format") {
-        // Load the session fixture
-        val sessionJson = readFileSync(
-            "${RESOURCES_PATH}fixtures/session-1e103837.json",
-            BufferEncoding.utf8
-        )
-        val session = json.decodeFromString<Session>(sessionJson)
+        test("should export session 1e103837 to expected markdown format") {
+            // Load the session fixture
+            val sessionJson = readFileSync(
+                "${RESOURCES_PATH}fixtures/session-1e103837.json",
+                BufferEncoding.utf8,
+            )
+            val session = json.decodeFromString<Session>(sessionJson)
 
-        // Export to markdown
-        val actualMarkdown = session.toMarkdown()
+            // Export to markdown
+            val actualMarkdown = session.toMarkdown()
 
-        // Load expected output
-        val expectedMarkdown = readFileSync(
-            "${RESOURCES_PATH}fixtures/expected-1e103837.md",
-            BufferEncoding.utf8
-        )
+            // Load expected output
+            val expectedMarkdown = readFileSync(
+                "${RESOURCES_PATH}fixtures/expected-1e103837.md",
+                BufferEncoding.utf8,
+            )
 
-        // Compare (trim to handle any trailing whitespace differences)
-        actualMarkdown.trim() shouldBe expectedMarkdown.trim()
-    }
-})
+            // Compare (trim to handle any trailing whitespace differences)
+            actualMarkdown.trim() shouldBe expectedMarkdown.trim()
+        }
+    },
+)

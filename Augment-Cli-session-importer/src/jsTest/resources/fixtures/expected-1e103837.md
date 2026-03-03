@@ -88,13 +88,13 @@ Take a look inside `"C:\nvm4w\nodejs\node_modules\@augmentcode\auggie\augment.mj
 >
 > Each `chatHistory` entry represents one "exchange" (a request-response cycle). The key observation is:
 >
-> 4. **`request_nodes`** in exchange N+1 contains:
-     >    - The **tool results** from the previous exchange (as `tool_result_node` with `type: 1`)
+> 1. **`request_nodes`** in exchange N+1 contains:
+>    - The **tool results** from the previous exchange (as `tool_result_node` with `type: 1`)
 >    - The **IDE state** (as `ide_state_node` with `type: 4`)
 >    - Sometimes a new user message (as `text_node` with `type: 0`)
 >
-> 5. **`response_nodes`** in exchange N contains:
-     >    - The AI's **thinking** (`type: 8`)
+> 2. **`response_nodes`** in exchange N contains:
+>    - The AI's **thinking** (`type: 8`)
 >    - **Tool calls** (`type: 5`) - what tools the AI wants to use
 >    - **Text output** (`type: 0`) - the AI's visible text response
 >    - **Token usage** (`type: 10`)
@@ -127,7 +127,7 @@ Take a look inside `"C:\nvm4w\nodejs\node_modules\@augmentcode\auggie\augment.mj
 >
 > Looking at your second session file (`bcdb2e51`), the pattern is clear:
 >
-> **Exchange 1** → AI calls `codebase-retrieval` and `view`  
+> **Exchange 1** → AI calls `codebase-retrieval` and `view`
 > **Exchange 2** → `request_nodes` contains the *results* of those tool calls (as `tool_result_node`)
 >
 > So the content appears:
@@ -144,7 +144,7 @@ Take a look inside `"C:\nvm4w\nodejs\node_modules\@augmentcode\auggie\augment.mj
 > // 2. AI thinking summary
 > // 3. Tool calls made (just the tool names + input JSON)
 > // 4. AI response text
-> 
+>
 > // SKIP tool_result_node content since:
 > // - It's often huge (file contents)
 > // - It appears in the next exchange anyway
@@ -176,9 +176,9 @@ modify the DTO
 > 3. The user wants a clean transcript
 >
 > I should:
-> 4. Look at the current DTO
-> 5. Understand what fields to keep/remove or mark
-> 6. Make the modifications
+> 1. Look at the current DTO
+> 2. Understand what fields to keep/remove or mark
+> 3. Make the modifications
 >
 > Let me view the current DTO file to see what needs to be modified.
 
@@ -214,10 +214,10 @@ modify the DTO
 >
 > Now I understand the structure. Let me modify the DTO to:
 >
-> 7. Add clear documentation about what's duplicated and what to use
-> 8. Simplify `RequestNode` by removing/commenting out the duplicated `toolResultNode` and uninteresting `ideStateNode`
-> 9. Add helper extension functions to make it easier to extract the "clean" conversation
-> 10. Keep the parsing working for the JSON but make it clear what to use
+> 1. Add clear documentation about what's duplicated and what to use
+> 2. Simplify `RequestNode` by removing/commenting out the duplicated `toolResultNode` and uninteresting `ideStateNode`
+> 3. Add helper extension functions to make it easier to extract the "clean" conversation
+> 4. Keep the parsing working for the JSON but make it clear what to use
 >
 
 > 🔧 **str-replace-editor**
@@ -509,9 +509,9 @@ because the JSON structure might be changed in the future, i think it would be e
 > 🤖 **Assistant**
 >
 > Now I understand the structure. Let me:
-> 4. Remove the helper classes/functions from the DTO file
-> 5. Create a new `SessionExporter.kt` file with the export logic
-> 6. Update Main.kt to test with the specified session file
+> 1. Remove the helper classes/functions from the DTO file
+> 2. Create a new `SessionExporter.kt` file with the export logic
+> 3. Update Main.kt to test with the specified session file
 >
 
 > 🔧 **str-replace-editor**
@@ -614,16 +614,16 @@ because the JSON structure might be changed in the future, i think it would be e
 > Contains all the export logic, separated from the DTOs:
 >
 > - **Extension functions** for extracting data from DTOs:
-    >   - `Exchange.getThinkingSummary()`
+>   - `Exchange.getThinkingSummary()`
 >   - `Exchange.getToolCalls()`
 >   - `Exchange.getTokenUsage()`
 >
 > - **Helper data classes**:
-    >   - `ToolCallWithResult` - pairs tool calls with their results (de-duplicated)
+>   - `ToolCallWithResult` - pairs tool calls with their results (de-duplicated)
 >   - `CleanExchange` - simplified representation for transcripts
 >
 > - **Session extension functions**:
-    >   - `Session.toCleanExchanges()` - converts to clean list without duplication
+>   - `Session.toCleanExchanges()` - converts to clean list without duplication
 >   - `Session.getToolCallsWithResults()` - links tool calls with results across exchanges
 >   - `Session.toMarkdown()` - exports session to markdown transcript
 >
@@ -749,10 +749,10 @@ Can you make this look a bit better from my perspective as a user/human?
 > 3. Don't need "Exchange 1234" headers - they're noise.
 >
 > So I should:
-> 4. Group consecutive exchanges where the user message is empty - these are continuations of the previous user-initiated exchange
-> 5. Collapse tool calls from multiple exchanges into one list
-> 6. Only show the final AI response (or a summary)
-> 7. Remove the "Exchange N" headers
+> 1. Group consecutive exchanges where the user message is empty - these are continuations of the previous user-initiated exchange
+> 2. Collapse tool calls from multiple exchanges into one list
+> 3. Only show the final AI response (or a summary)
+> 4. Remove the "Exchange N" headers
 >
 > Let me think about the structure:
 > - Start a new "user turn" when `requestMessage` is not empty
@@ -884,7 +884,7 @@ Can you make this look a bit better from my perspective as a user/human?
 > Or maybe I should structure it differently - show the progression:
 > 1. User message
 > 2. Then for each "step" in the turn:
-     >    - Thinking (if any)
+>    - Thinking (if any)
 >    - Tools called (with details)
 >    - Response (if any)
 >
@@ -1033,25 +1033,25 @@ Can you make this look a bit better from my perspective as a user/human?
 > 7. **Changed files summary** at the end of each turn
 >
 > The output is working. Would you like me to:
-> 8. Save the output to a file instead of printing to console?
-> 9. Add any additional information (like token usage statistics)?
-> 10. Adjust the formatting in any way?
+> 1. Save the output to a file instead of printing to console?
+> 2. Add any additional information (like token usage statistics)?
+> 3. Adjust the formatting in any way?
 >
 > Here's what the structure looks like for a sample turn:
 >
 > ```markdown
 > ## 👤 User
-> 
+>
 > inside Augment-Cli-session-importer, in main, i want to list all files...
-> 
+>
 > ### 🧠 Step 1: Thinking
-> 
+>
 > The user wants to implement two functions...
-> 
+>
 > ### 🔧 Step 1: Tool Calls
-> 
+>
 > #### codebase-retrieval
-> 
+>
 > ```json
 > {
 >     "information_request": "Find the main function..."
@@ -1228,26 +1228,26 @@ why the --- separator?
 >
 > ```markdown
 > # Session Title
-> 
+>
 > **Session ID:** `...`
 > **Created:** ...
 > **Modified:** ...
-> 
+>
 > ## 👤 User
-> 
+>
 > first question...
-> 
+>
 > > 🧠 **Thinking**
 > > ...
-> 
+>
 > > 🔧 **view**
 > > ...
-> 
+>
 > > 🤖 **Assistant**
 > > ...
-> 
+>
 > ## 👤 User
-> 
+>
 > second question...
 > ```
 >
