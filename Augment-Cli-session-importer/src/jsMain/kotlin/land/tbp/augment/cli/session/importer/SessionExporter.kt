@@ -48,19 +48,45 @@ data class ToolCallWithResult(
 )
 
 /**
+ * Represents a single step in the AI's processing.
+ * Preserves the order: thinking -> tool calls -> response
+ */
+data class AssistantStep(
+    val thinking: String?,
+    val toolCalls: List<ToolUse>,
+    val response: String,
+    val changedFiles: List<String>,
+)
+
+/**
  * A human-centric turn in the conversation.
  *
  * From the user's perspective, a "turn" starts when they type a message
  * and includes ALL the back-and-forth between Auggie and the LLM until
  * the user types again.
+ *
+ * The `steps` list preserves the chronological order of the AI's work.
  */
 data class UserTurn(
     val userMessage: String,
-    val thinkingSummary: String?,
-    val toolCalls: List<ToolUse>,
-    val aiResponse: String,
-    val changedFiles: List<String>,
-)
+    val steps: List<AssistantStep>,
+) {
+    /** All unique thinking summaries in this turn */
+    val allThinking: List<String>
+        get() = steps.mapNotNull { it.thinking }.filter { it.isNotBlank() }.distinct()
+
+    /** All tool calls made in this turn, in order */
+    val allToolCalls: List<ToolUse>
+        get() = steps.flatMap { it.toolCalls }
+
+    /** All non-empty responses, in order */
+    val allResponses: List<String>
+        get() = steps.map { it.response }.filter { it.isNotBlank() }
+
+    /** All changed files, deduplicated */
+    val allChangedFiles: List<String>
+        get() = steps.flatMap { it.changedFiles }.distinct()
+}
 
 // =============================================================================
 // Session extension functions for export
@@ -71,15 +97,13 @@ data class UserTurn(
  *
  * Groups consecutive exchanges where the user message is empty -
  * these are tool execution loops that are part of the same user turn.
+ * Preserves chronological order of AI steps within each turn.
  */
 fun Session.toUserTurns(): List<UserTurn> {
     val turns = mutableListOf<UserTurn>()
 
     var currentUserMessage: String? = null
-    var accumulatedThinking: String? = null
-    val accumulatedToolCalls = mutableListOf<ToolUse>()
-    val accumulatedResponses = mutableListOf<String>()
-    val accumulatedChangedFiles = mutableListOf<String>()
+    val currentSteps = mutableListOf<AssistantStep>()
 
     for (history in chatHistory) {
         val exchange = history.exchange
@@ -91,34 +115,26 @@ fun Session.toUserTurns(): List<UserTurn> {
                 turns.add(
                     UserTurn(
                         userMessage = currentUserMessage,
-                        thinkingSummary = accumulatedThinking,
-                        toolCalls = accumulatedToolCalls.toList(),
-                        aiResponse = accumulatedResponses
-                            .filter { it.isNotBlank() }
-                            .joinToString("\n\n"),
-                        changedFiles = accumulatedChangedFiles.distinct(),
+                        steps = currentSteps.toList(),
                     )
                 )
             }
 
             // Start new turn
             currentUserMessage = userMsg
-            accumulatedThinking = exchange.getThinkingSummary()
-            accumulatedToolCalls.clear()
-            accumulatedToolCalls.addAll(exchange.getToolCalls())
-            accumulatedResponses.clear()
-            accumulatedResponses.add(exchange.responseText)
-            accumulatedChangedFiles.clear()
-            accumulatedChangedFiles.addAll(history.changedFiles)
-        } else {
-            // Empty user message - continuation of previous turn (tool loop)
-            // Keep first thinking summary if we don't have one yet
-            if (accumulatedThinking == null) {
-                accumulatedThinking = exchange.getThinkingSummary()
-            }
-            accumulatedToolCalls.addAll(exchange.getToolCalls())
-            accumulatedResponses.add(exchange.responseText)
-            accumulatedChangedFiles.addAll(history.changedFiles)
+            currentSteps.clear()
+        }
+
+        // Add this exchange's content as a step (for both new and continuation)
+        if (currentUserMessage != null) {
+            currentSteps.add(
+                AssistantStep(
+                    thinking = exchange.getThinkingSummary(),
+                    toolCalls = exchange.getToolCalls(),
+                    response = exchange.responseText,
+                    changedFiles = history.changedFiles,
+                )
+            )
         }
     }
 
@@ -127,12 +143,7 @@ fun Session.toUserTurns(): List<UserTurn> {
         turns.add(
             UserTurn(
                 userMessage = currentUserMessage,
-                thinkingSummary = accumulatedThinking,
-                toolCalls = accumulatedToolCalls.toList(),
-                aiResponse = accumulatedResponses
-                    .filter { it.isNotBlank() }
-                    .joinToString("\n\n"),
-                changedFiles = accumulatedChangedFiles.distinct(),
+                steps = currentSteps.toList(),
             )
         )
     }
@@ -174,18 +185,21 @@ fun Session.getToolCallsWithResults(): List<ToolCallWithResult> {
 /**
  * Export a session to a clean Markdown transcript.
  *
- * Uses the human-centric UserTurn structure - each section represents
- * one user message and everything that happened in response.
+ * Designed for both:
+ * - Humans to read and understand what happened
+ * - LLMs to use as context to resume work on the topic
+ *
+ * Preserves chronological order within each user turn.
  */
 fun Session.toMarkdown(): String {
     val sb = StringBuilder()
 
-    // Header
+    // Header with context for LLMs
     sb.appendLine("# ${customTitle ?: "Session $sessionId"}")
     sb.appendLine()
-    sb.appendLine("*Created: $created • Modified: $modified*")
-    sb.appendLine()
-    sb.appendLine("---")
+    sb.appendLine("**Session ID:** `$sessionId`")
+    sb.appendLine("**Created:** $created")
+    sb.appendLine("**Modified:** $modified")
     sb.appendLine()
 
     // User turns
@@ -196,52 +210,74 @@ fun Session.toMarkdown(): String {
         sb.appendLine(turn.userMessage)
         sb.appendLine()
 
-        // AI thinking (if present and non-empty)
-        turn.thinkingSummary?.takeIf { it.isNotBlank() }?.let { thinking ->
-            sb.appendLine("### 🧠 Thinking")
-            sb.appendLine()
-            sb.appendLine(thinking)
-            sb.appendLine()
-        }
+        // Track which thinking summaries we've already shown
+        val shownThinking = mutableSetOf<String>()
 
-        // Tool calls (if any) - grouped by tool name with count
-        if (turn.toolCalls.isNotEmpty()) {
-            sb.appendLine("### 🔧 Tools Used")
-            sb.appendLine()
-            turn.toolCalls
-                .groupBy { it.toolName }
-                .forEach { (toolName, calls) ->
-                    if (calls.size > 1) {
-                        sb.appendLine("- **$toolName** (×${calls.size})")
-                    } else {
-                        sb.appendLine("- **$toolName**")
-                    }
+        // Process steps in chronological order
+        turn.steps.forEach { step ->
+            // Thinking (if present and not a duplicate)
+            step.thinking?.takeIf { it.isNotBlank() && it !in shownThinking }?.let { thinking ->
+                shownThinking.add(thinking)
+                sb.appendLine("> 🧠 **Thinking**")
+                sb.appendLine(">")
+                thinking.lines().forEach { line ->
+                    sb.appendLine("> $line")
                 }
-            sb.appendLine()
+                sb.appendLine()
+            }
+
+            // Tool calls with details
+            step.toolCalls.forEach { tool ->
+                sb.appendLine("> 🔧 **${tool.toolName}**")
+                sb.appendLine(">")
+                sb.appendLine("> ```json")
+                formatToolInput(tool.inputJson).lines().forEach { line ->
+                    sb.appendLine("> $line")
+                }
+                sb.appendLine("> ```")
+                sb.appendLine()
+            }
+
+            // Response (if non-empty)
+            if (step.response.isNotBlank()) {
+                sb.appendLine("> 🤖 **Assistant**")
+                sb.appendLine(">")
+                step.response.lines().forEach { line ->
+                    sb.appendLine("> $line")
+                }
+                sb.appendLine()
+            }
         }
 
-        // AI response (only if non-empty)
-        if (turn.aiResponse.isNotBlank()) {
-            sb.appendLine("### 🤖 Assistant")
-            sb.appendLine()
-            sb.appendLine(turn.aiResponse)
-            sb.appendLine()
-        }
-
-        // Changed files (if any)
-        if (turn.changedFiles.isNotEmpty()) {
+        // Changed files summary (deduplicated across all steps)
+        if (turn.allChangedFiles.isNotEmpty()) {
             sb.appendLine("### 📝 Files Changed")
             sb.appendLine()
-            turn.changedFiles.forEach { file ->
+            turn.allChangedFiles.forEach { file ->
                 sb.appendLine("- `$file`")
             }
             sb.appendLine()
         }
-
-        sb.appendLine("---")
-        sb.appendLine()
     }
 
     return sb.toString()
+}
+
+/**
+ * Format tool input JSON for readability.
+ * Pretty-prints if it's valid JSON, otherwise returns as-is.
+ */
+private fun formatToolInput(inputJson: String): String {
+    return try {
+        // Try to parse and pretty-print
+        val element = kotlinx.serialization.json.Json.parseToJsonElement(inputJson)
+        kotlinx.serialization.json.Json { prettyPrint = true }.encodeToString(
+            kotlinx.serialization.json.JsonElement.serializer(),
+            element
+        )
+    } catch (e: Exception) {
+        // If parsing fails, return as-is
+        inputJson
+    }
 }
 
