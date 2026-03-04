@@ -30,7 +30,7 @@ class SessionExporterTest : FunSpec(
         test("should export session 1e103837 to expected markdown format") {
             // Load the session fixture
             val sessionJson = readFileSync(
-                "${RESOURCES_PATH}fixtures/session-1e103837.json",
+                "${RESOURCES_PATH}fixtures/1e103837-ea1a-4224-bf80-9209d68e8142.json",
                 BufferEncoding.utf8,
             )
             val session = json.decodeFromString<Session>(sessionJson)
