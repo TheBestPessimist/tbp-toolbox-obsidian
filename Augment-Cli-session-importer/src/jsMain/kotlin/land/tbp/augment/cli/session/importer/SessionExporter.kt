@@ -33,6 +33,34 @@ fun Exchange.getTokenUsage(): TokenUsage? =
         .firstOrNull { it.type == ResponseNodeType.TokenUsage }
         ?.tokenUsage
 
+/**
+ * Get all response items in display order.
+ *
+ * The JSON has nodes in execution order (tools before final text),
+ * but for display we want: Thinking -> Text -> Tool calls
+ * This matches how Augment CLI displays the conversation.
+ */
+fun Exchange.getResponseItems(): List<ResponseItem> {
+    val items = responseNodes.mapNotNull { node ->
+        when (node.type) {
+            ResponseNodeType.Thinking -> node.thinking?.summary?.takeIf { it.isNotBlank() }
+                ?.let { ResponseItem.Thinking(it) }
+            ResponseNodeType.Text -> node.content.takeIf { it.isNotBlank() }
+                ?.let { ResponseItem.Text(it) }
+            ResponseNodeType.ToolUse -> node.toolUse?.takeIf { !it.isPartial }
+                ?.let { ResponseItem.Tool(it) }
+            ResponseNodeType.TokenUsage -> null // Skip token usage in items
+        }
+    }
+
+    // Reorder: Thinking first, then Text, then Tool calls
+    val thinking = items.filterIsInstance<ResponseItem.Thinking>()
+    val text = items.filterIsInstance<ResponseItem.Text>()
+    val tools = items.filterIsInstance<ResponseItem.Tool>()
+
+    return thinking + text + tools
+}
+
 // =============================================================================
 // Helper data classes for clean export
 // =============================================================================
@@ -48,15 +76,35 @@ data class ToolCallWithResult(
 )
 
 /**
+ * A single item in the AI's response, preserving original order.
+ * This allows us to show interleaved text and tool calls correctly.
+ */
+sealed class ResponseItem {
+    data class Thinking(val summary: String) : ResponseItem()
+    data class Text(val content: String) : ResponseItem()
+    data class Tool(val toolUse: ToolUse) : ResponseItem()
+}
+
+/**
  * Represents a single step in the AI's processing.
- * Preserves the order: thinking -> tool calls -> response
+ * Contains response items in their original order.
  */
 data class AssistantStep(
-    val thinking: String?,
-    val toolCalls: List<ToolUse>,
-    val response: String,
+    val items: List<ResponseItem>,
     val changedFiles: List<String>,
-)
+) {
+    /** Get thinking summary if present */
+    val thinking: String?
+        get() = items.filterIsInstance<ResponseItem.Thinking>().firstOrNull()?.summary
+
+    /** Get all tool calls in order */
+    val toolCalls: List<ToolUse>
+        get() = items.filterIsInstance<ResponseItem.Tool>().map { it.toolUse }
+
+    /** Get all text responses concatenated */
+    val response: String
+        get() = items.filterIsInstance<ResponseItem.Text>().joinToString("\n\n") { it.content }
+}
 
 /**
  * A human-centric turn in the conversation.
@@ -129,9 +177,7 @@ fun Session.toUserTurns(): List<UserTurn> {
         if (currentUserMessage != null) {
             currentSteps.add(
                 AssistantStep(
-                    thinking = exchange.getThinkingSummary(),
-                    toolCalls = exchange.getToolCalls(),
-                    response = exchange.responseText,
+                    items = exchange.getResponseItems(),
                     changedFiles = history.changedFiles,
                 )
             )
@@ -210,42 +256,44 @@ fun Session.toMarkdown(): String {
         sb.appendLine(turn.userMessage)
         sb.appendLine()
 
-        // Track which thinking summaries we've already shown
+        // Track which thinking summaries we've already shown (avoid duplicates)
         val shownThinking = mutableSetOf<String>()
 
-        // Process steps in chronological order
+        // Process steps in chronological order, preserving item order within each step
         turn.steps.forEach { step ->
-            // Thinking (if present and not a duplicate)
-            step.thinking?.takeIf { it.isNotBlank() && it !in shownThinking }?.let { thinking ->
-                shownThinking.add(thinking)
-                sb.appendLine("> 🧠 **Thinking**")
-                sb.appendLine(">")
-                thinking.lines().forEach { line ->
-                    sb.appendLine("> $line".trimEnd())
+            step.items.forEach { item ->
+                when (item) {
+                    is ResponseItem.Thinking -> {
+                        // Skip if we've already shown this thinking
+                        if (item.summary !in shownThinking) {
+                            shownThinking.add(item.summary)
+                            sb.appendLine("> 🧠 **Thinking**")
+                            sb.appendLine(">")
+                            item.summary.lines().forEach { line ->
+                                sb.appendLine("> $line".trimEnd())
+                            }
+                            sb.appendLine()
+                        }
+                    }
+                    is ResponseItem.Tool -> {
+                        sb.appendLine("> 🔧 **${item.toolUse.toolName}**")
+                        sb.appendLine(">")
+                        sb.appendLine("> ```json")
+                        formatToolInput(item.toolUse.inputJson).lines().forEach { line ->
+                            sb.appendLine("> $line".trimEnd())
+                        }
+                        sb.appendLine("> ```")
+                        sb.appendLine()
+                    }
+                    is ResponseItem.Text -> {
+                        sb.appendLine("> 🤖 **Assistant**")
+                        sb.appendLine(">")
+                        item.content.lines().forEach { line ->
+                            sb.appendLine("> $line".trimEnd())
+                        }
+                        sb.appendLine()
+                    }
                 }
-                sb.appendLine()
-            }
-
-            // Tool calls with details
-            step.toolCalls.forEach { tool ->
-                sb.appendLine("> 🔧 **${tool.toolName}**")
-                sb.appendLine(">")
-                sb.appendLine("> ```json")
-                formatToolInput(tool.inputJson).lines().forEach { line ->
-                    sb.appendLine("> $line".trimEnd())
-                }
-                sb.appendLine("> ```")
-                sb.appendLine()
-            }
-
-            // Response (if non-empty)
-            if (step.response.isNotBlank()) {
-                sb.appendLine("> 🤖 **Assistant**")
-                sb.appendLine(">")
-                step.response.lines().forEach { line ->
-                    sb.appendLine("> $line".trimEnd())
-                }
-                sb.appendLine()
             }
         }
 
