@@ -82,7 +82,7 @@ data class ToolCallWithResult(
 sealed class ResponseItem {
     data class Thinking(val summary: String) : ResponseItem()
     data class Text(val content: String) : ResponseItem()
-    data class Tool(val toolUse: ToolUse) : ResponseItem()
+    data class Tool(val toolUse: ToolUse, val result: ToolResultNode? = null) : ResponseItem()
 }
 
 /**
@@ -153,7 +153,7 @@ fun Session.toUserTurns(): List<UserTurn> {
     var currentUserMessage: String? = null
     val currentSteps = mutableListOf<AssistantStep>()
 
-    for (history in chatHistory) {
+    for ((index, history) in chatHistory.withIndex()) {
         val exchange = history.exchange
         val userMsg = exchange.requestMessage.trim()
 
@@ -175,9 +175,27 @@ fun Session.toUserTurns(): List<UserTurn> {
 
         // Add this exchange's content as a step (for both new and continuation)
         if (currentUserMessage != null) {
+            // Get tool results from the next exchange
+            val nextExchange = chatHistory.getOrNull(index + 1)?.exchange
+            val toolResults = nextExchange?.requestNodes
+                ?.filter { it.type == RequestNodeType.ToolResult }
+                ?.mapNotNull { it.toolResultNode }
+                ?: emptyList()
+
+            // Get response items and pair tools with their results
+            val items = exchange.getResponseItems().map { item ->
+                when (item) {
+                    is ResponseItem.Tool -> {
+                        val result = toolResults.find { it.toolUseId == item.toolUse.toolUseId }
+                        ResponseItem.Tool(item.toolUse, result)
+                    }
+                    else -> item
+                }
+            }
+
             currentSteps.add(
                 AssistantStep(
-                    items = exchange.getResponseItems(),
+                    items = items,
                     changedFiles = history.changedFiles,
                 )
             )
@@ -283,6 +301,22 @@ fun Session.toMarkdown(): String {
                             sb.appendLine("> $line".trimEnd())
                         }
                         sb.appendLine("> ```")
+
+                        // Add tool output if available
+                        if (item.result != null) {
+                            sb.appendLine(">")
+                            if (item.result.isError) {
+                                sb.appendLine("> Tool Error:")
+                            } else {
+                                sb.appendLine("> Tool Output:")
+                            }
+                            sb.appendLine(">")
+                            sb.appendLine("> `````")
+                            item.result.content.lines().forEach { line ->
+                                sb.appendLine(">    $line".trimEnd())
+                            }
+                            sb.appendLine("> `````")
+                        }
                         sb.appendLine()
                     }
                     is ResponseItem.Text -> {
