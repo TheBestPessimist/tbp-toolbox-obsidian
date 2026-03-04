@@ -44,8 +44,11 @@ class SessionExporterTest : FunSpec(
                 BufferEncoding.utf8,
             )
 
-            // Compare (trim to handle any trailing whitespace differences)
-            actualMarkdown.trim().lines() shouldBe expectedMarkdown.trim().lines()
+            actualMarkdown shouldBeIgnoringNewlines expectedMarkdown
         }
     },
 )
+
+infix fun String.shouldBeIgnoringNewlines(expected: String?): String {
+    return this.trim().lines().joinToString("\n") shouldBe expected?.trim()?.lines()?.joinToString("\n")
+}
