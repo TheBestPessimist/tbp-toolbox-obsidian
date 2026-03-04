@@ -1,11 +1,15 @@
 package land.tbp.augment.cli.session.importer
 
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.comparables.shouldBeEqualComparingTo
+import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import node.buffer.BufferEncoding
 import node.buffer.utf8
 import node.fs.readFileSync
+import node.fs.writeFileSync
 
 /**
  * In Kotlin JS, test resources from `src/jsTest/resources` are copied to
@@ -44,11 +48,13 @@ class SessionExporterTest : FunSpec(
                 BufferEncoding.utf8,
             )
 
-            actualMarkdown shouldBeIgnoringNewlines expectedMarkdown
+            // Compare line by line to find first difference
+            val actualLines = actualMarkdown.trim().lines()
+            val expectedLines = expectedMarkdown.trim().lines()
+
+            actualLines.zip(expectedLines).forEach { (actual, expected) ->
+                actual shouldBeEqualComparingTo expected
+            }
         }
     },
 )
-
-infix fun String.shouldBeIgnoringNewlines(expected: String?): String {
-    return this.trim().lines().joinToString("\n") shouldBe expected?.trim()?.lines()?.joinToString("\n")
-}

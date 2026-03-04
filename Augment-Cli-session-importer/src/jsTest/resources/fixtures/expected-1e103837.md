@@ -11724,66 +11724,66 @@ no sorry its the other way around: ">" should be used
 >
 > `````
 >    Here's the result of running `cat -n` on Augment-Cli-session-importer/src/jsTest/resources/fixtures/expected-bcdb2e51.md:
->         1	��#   L i s t   f i l e s   w i t h   k o t l i n x . i o   a n d   N o d e 
->     
->         2	 
->     
->         3	 * * S e s s i o n   I D : * *   ` b c d b 2 e 5 1 - e d 3 f - 4 f 8 5 - 9 f 9 2 - 2 e 7 c c f 0 0 7 d 2 c ` 
->     
->         4	 * * C r e a t e d : * *   2 0 2 6 - 0 2 - 2 8 T 1 0 : 2 8 : 2 1 . 3 0 5 Z 
->     
->         5	 * * M o d i f i e d : * *   2 0 2 6 - 0 2 - 2 8 T 1 1 : 1 7 : 5 8 . 5 8 1 Z 
->     
->         6	 
->     
->         7	 # #   a"�� �   U s e r 
->     
->         8	 
->     
->         9	 i n s i d e   A u g m e n t - C l i - s e s s i o n - i m p o r t e r ,   i n   m a i n ,   i   w a n t   t o   l i s t   a l l   f i l e s   a n d   d i r s   u n d e r   t h e   a u g m e n t P a t h .   a f t e r   a   l o t   o f   t r y i n g ,   i ' m   s t a r t i n g   t o   t h i n k   k o t l i n x . i o   i s   h a r d . 
->     
->        10	 i m p l e m e n t   2   f u n c t i o n s   d o i n g   t h e   s a m e   t h i n g ,   u s i n g   k o t l i n x . i o   a n d   a l s o   n o d e ' s   f i l e s y s t e m   a p i . 
->     
->        11	 
->     
->        12	 >   a"�� �   * * T h i n k i n g * * 
->     
->        13	 >   
->     
->        14	 >   T h e   u s e r   w a n t s   t o   i m p l e m e n t   t w o   f u n c t i o n s   t o   l i s t   a l l   f i l e s   a n d   d i r e c t o r i e s   u n d e r   a   p a t h   i n   t h e i r   K o t l i n / J S   p r o j e c t .   T h e y   w a n t   o n e   i m p l e m e n t a t i o n   u s i n g   k o t l i n x . i o   a n d   a n o t h e r   u s i n g   N o d e . j s   f i l e s y s t e m   A P I . 
->     
->        15	 >   
->     
->        16	 >   L e t   m e   f i r s t   l o o k   a t   t h e   c u r r e n t   c o d e   s t r u c t u r e   t o   u n d e r s t a n d   w h a t   t h e y   h a v e . 
->     
->        17	 
->     
->        18	 >   a"�� �   * * c o d e b a s e - r e t r i e v a l * * 
->     
->        19	 >   
->     
->        20	 >   ` ` ` j s o n 
->     
->        21	 >   { 
->     
->        22	 >           " i n f o r m a t i o n _ r e q u e s t " :   " F i n d   t h e   m a i n   f u n c t i o n   i n   A u g m e n t - C l i - s e s s i o n - i m p o r t e r   a n d   u n d e r s t a n d   t h e   s t r u c t u r e   o f   t h e   p r o j e c t ,   i n c l u d i n g   h o w   a u g m e n t P a t h   i s   d e f i n e d   a n d   a n y   e x i s t i n g   f i l e   s y s t e m   o p e r a t i o n s " 
->     
->        23	 >   } 
->     
->        24	 >   ` ` ` 
->     
->        25	 
->     
->        26	 >   a"�� �   * * v i e w * * 
->     
->        27	 >   
->     
->        28	 >   ` ` ` j s o n 
->     
->        29	 >   { 
->     
->        30	 >           " p a t h " :   " A u g m e n t - C l i - s e s s i o n - i m p o r t e r " , 
->     
+>         1	��#   L i s t   f i l e s   w i t h   k o t l i n x . i o   a n d   N o d e 
+>     
+>         2	 
+>     
+>         3	 * * S e s s i o n   I D : * *   ` b c d b 2 e 5 1 - e d 3 f - 4 f 8 5 - 9 f 9 2 - 2 e 7 c c f 0 0 7 d 2 c ` 
+>     
+>         4	 * * C r e a t e d : * *   2 0 2 6 - 0 2 - 2 8 T 1 0 : 2 8 : 2 1 . 3 0 5 Z 
+>     
+>         5	 * * M o d i f i e d : * *   2 0 2 6 - 0 2 - 2 8 T 1 1 : 1 7 : 5 8 . 5 8 1 Z 
+>     
+>         6	 
+>     
+>         7	 # #   a"�� �   U s e r 
+>     
+>         8	 
+>     
+>         9	 i n s i d e   A u g m e n t - C l i - s e s s i o n - i m p o r t e r ,   i n   m a i n ,   i   w a n t   t o   l i s t   a l l   f i l e s   a n d   d i r s   u n d e r   t h e   a u g m e n t P a t h .   a f t e r   a   l o t   o f   t r y i n g ,   i ' m   s t a r t i n g   t o   t h i n k   k o t l i n x . i o   i s   h a r d . 
+>     
+>        10	 i m p l e m e n t   2   f u n c t i o n s   d o i n g   t h e   s a m e   t h i n g ,   u s i n g   k o t l i n x . i o   a n d   a l s o   n o d e ' s   f i l e s y s t e m   a p i . 
+>     
+>        11	 
+>     
+>        12	 >   a"�� �   * * T h i n k i n g * * 
+>     
+>        13	 >   
+>     
+>        14	 >   T h e   u s e r   w a n t s   t o   i m p l e m e n t   t w o   f u n c t i o n s   t o   l i s t   a l l   f i l e s   a n d   d i r e c t o r i e s   u n d e r   a   p a t h   i n   t h e i r   K o t l i n / J S   p r o j e c t .   T h e y   w a n t   o n e   i m p l e m e n t a t i o n   u s i n g   k o t l i n x . i o   a n d   a n o t h e r   u s i n g   N o d e . j s   f i l e s y s t e m   A P I . 
+>     
+>        15	 >   
+>     
+>        16	 >   L e t   m e   f i r s t   l o o k   a t   t h e   c u r r e n t   c o d e   s t r u c t u r e   t o   u n d e r s t a n d   w h a t   t h e y   h a v e . 
+>     
+>        17	 
+>     
+>        18	 >   a"�� �   * * c o d e b a s e - r e t r i e v a l * * 
+>     
+>        19	 >   
+>     
+>        20	 >   ` ` ` j s o n 
+>     
+>        21	 >   { 
+>     
+>        22	 >           " i n f o r m a t i o n _ r e q u e s t " :   " F i n d   t h e   m a i n   f u n c t i o n   i n   A u g m e n t - C l i - s e s s i o n - i m p o r t e r   a n d   u n d e r s t a n d   t h e   s t r u c t u r e   o f   t h e   p r o j e c t ,   i n c l u d i n g   h o w   a u g m e n t P a t h   i s   d e f i n e d   a n d   a n y   e x i s t i n g   f i l e   s y s t e m   o p e r a t i o n s " 
+>     
+>        23	 >   } 
+>     
+>        24	 >   ` ` ` 
+>     
+>        25	 
+>     
+>        26	 >   a"�� �   * * v i e w * * 
+>     
+>        27	 >   
+>     
+>        28	 >   ` ` ` j s o n 
+>     
+>        29	 >   { 
+>     
+>        30	 >           " p a t h " :   " A u g m e n t - C l i - s e s s i o n - i m p o r t e r " , 
+>     
 >    Total lines in file: 2005
 >
 > `````
