@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
 import kotlin.system.exitProcess
+import kotlin.time.Duration.Companion.milliseconds
 
 @Serializable
 data class AnimeResponse(
@@ -107,7 +108,7 @@ fun main() = runBlocking {
         }
     }
     
-    val directory = File("D:\\all\\notes\\temp\\CSV Import")
+    val directory = File("ZZZZZZZZZZZ")
     val mdFiles = directory.listFiles { file -> file.extension == "md" }?.sortedBy { it.name } ?: emptyList()
     
     println("Found ${mdFiles.size} markdown files to process")
@@ -148,14 +149,14 @@ fun main() = runBlocking {
             // Being conservative with 1 request per second
             if (index < mdFiles.size - 1) {
                 println("  ⏳ Waiting 1 second (rate limiting)...")
-                delay(1000)
+                delay(1000.milliseconds)
             }
             
         } catch (e: Exception) {
             println("  ✗ Error: ${e.message}")
             e.printStackTrace()
+            // exitProcess(1)
         }
-        exitProcess(1)
     }
     
     client.close()
