@@ -31,3 +31,4 @@ include("obsidian-api")
 include("obsidian-fake")
 
 include("Augment-Cli-session-importer")
+include("mal-jikan-importer")
