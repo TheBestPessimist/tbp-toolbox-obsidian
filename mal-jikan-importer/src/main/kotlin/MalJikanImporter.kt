@@ -38,65 +38,6 @@ data class JpgImage(
     val large_image_url: String
 )
 
-fun extractFrontmatter(content: String): Pair<Map<String, String>, String> {
-    val lines = content.lines()
-    if (lines.firstOrNull() != "---") {
-        return emptyMap<String, String>() to content
-    }
-    
-    val endIndex = lines.drop(1).indexOfFirst { it == "---" }
-    if (endIndex == -1) {
-        return emptyMap<String, String>() to content
-    }
-    
-    val frontmatterLines = lines.subList(1, endIndex + 1)
-    val frontmatter = frontmatterLines.associate { line ->
-        val parts = line.split(":", limit = 2)
-        if (parts.size == 2) {
-            parts[0].trim() to parts[1].trim()
-        } else {
-            parts[0].trim() to ""
-        }
-    }
-    
-    val bodyStartIndex = endIndex + 2
-    val body = if (bodyStartIndex < lines.size) {
-        lines.subList(bodyStartIndex, lines.size).joinToString("\n")
-    } else {
-        ""
-    }
-    
-    return frontmatter to body
-}
-
-fun updateFrontmatter(
-    frontmatter: Map<String, String>,
-    imageUrl: String,
-    url: String,
-    score: Double?,
-    synopsis: String?
-): Map<String, String> {
-    val mutable = frontmatter.toMutableMap()
-    mutable["mal_image_url"] = imageUrl
-    mutable["mal_url"] = url
-    mutable["mal_score"] = score?.toString() ?: ""
-    mutable["mal_synopsis"] = synopsis?.replace("\n", " ")?.replace("\r", "") ?: ""
-    return mutable
-}
-
-fun writeFrontmatter(frontmatter: Map<String, String>, body: String): String {
-    val sb = StringBuilder()
-    sb.appendLine("---")
-    frontmatter.forEach { (key, value) ->
-        sb.appendLine("$key: $value")
-    }
-    sb.appendLine("---")
-    if (body.isNotEmpty()) {
-        sb.appendLine()
-        sb.append(body)
-    }
-    return sb.toString()
-}
 
 fun main() = runBlocking {
     val client = HttpClient(CIO) {
@@ -161,4 +102,21 @@ fun main() = runBlocking {
     
     client.close()
     println("\n✓ Processing complete!")
+}
+
+
+
+fun updateFrontmatter(
+    frontmatter: Map<String, String>,
+    imageUrl: String,
+    url: String,
+    score: Double?,
+    synopsis: String?
+): Map<String, String> {
+    val mutable = frontmatter.toMutableMap()
+    mutable["mal_image_url"] = imageUrl
+    mutable["mal_url"] = url
+    mutable["mal_score"] = score?.toString() ?: ""
+    mutable["mal_synopsis"] = synopsis?.replace("\n", " ")?.replace("\r", "") ?: ""
+    return mutable
 }
